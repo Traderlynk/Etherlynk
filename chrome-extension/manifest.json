@@ -1,0 +1,49 @@
+{
+  "manifest_version": 2,
+  "minimum_chrome_version": "34",  
+  "options_page": "options/index.html",  
+   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' 'unsafe-inline' data: http: https:",  
+
+  "name": "Etherlynk Communicator",
+  "description": "Etherlynk Communicator is a decentralized communications application for Ethereum",
+  "version": "0.0.6",
+    
+  "background": {
+        "persistent": true,
+        "scripts": [ 
+        "js/jquery.min.js", "js/libs.bundle.js", "js/strophe.reconnect.js", "js/moment.js", "js/sip.js", "js/etherlynk.js", "js/etherlynk-ui.js", "js/etherlynk-io-xmpp.js", "js/tletherlynk.midi.js", "js/background.js"
+        ]
+  }, 
+  
+  "browser_action": {
+      "default_icon": {
+         "19": "tl_icon.png",
+         "38": "tl_icon.png"
+      },  
+      "default_popup": "popup.html",      
+      "default_title": "Etherlynk"    
+  },
+
+  "icons": {
+      "128": "etherlynk_logo_square.png",
+      "16": "tl_icon.png",
+      "48": "tl_icon.png"
+  }, 
+   
+  "permissions": [
+	"background", 
+        "contextMenus",	
+	"desktopCapture",
+	"storage",
+	"tabs",
+	"idle", 
+	"notifications", 
+	"http://*/*", 
+	"https://*/*" 
+  ],
+  "externally_connectable": {
+      "matches": [
+          "*://traderlynk.net/*", "*://btg199251/*", "*://wtlkd001/*", "*://tllt0002/*", "*://10.77.164.249/*"
+      ]
+  }
+}
