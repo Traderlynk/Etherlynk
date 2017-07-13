@@ -6,7 +6,7 @@
 
   "name": "Etherlynk Communicator",
   "description": "Etherlynk Communicator is a decentralized communications application for Ethereum",
-  "version": "0.0.6",
+  "version": "0.0.8",
     
   "background": {
         "persistent": true,
@@ -31,15 +31,15 @@
   }, 
    
   "permissions": [
-	"background", 
-        "contextMenus",	
-	"desktopCapture",
-	"storage",
-	"tabs",
-	"idle", 
-	"notifications", 
-	"http://*/*", 
-	"https://*/*" 
+    "background", 
+        "contextMenus", 
+    "desktopCapture",
+    "storage",
+    "tabs",
+    "idle", 
+    "notifications", 
+    "http://*/*", 
+    "https://*/*" 
   ],
   "externally_connectable": {
       "matches": [
