@@ -1,5 +1,18 @@
 function fetchEtherlynks(callback) 
-{   
+{  
+    etherlynk.connection.addHandler(function(presence)
+    {
+        var to = $(presence).attr('to');
+        var type = $(presence).attr('type');        
+        var from = Strophe.getBareJidFromJid($(presence).attr('from'));
+        
+        console.log("presence handler", from, to, type);
+        $(document).trigger("ofmeet.user.presence", {from : from, to: to, type: type});          
+    
+        return true;
+        
+    }, null, 'presence');
+
     etherlynk.connection.addHandler(function(message)
     {
         var id = $(message).attr("from");
@@ -13,6 +26,40 @@ function fetchEtherlynks(callback)
         
         console.log("message handler", from, to, type)      
 
+        $(message).find('active').each(function ()   
+        {
+            var jid = $(this).attr("jid");
+            var from = $(this).attr("from");
+            var to = $(this).attr("to");
+            
+            if (jid && from && to)
+            {
+                var conference = Strophe.getNodeFromJid(jid);
+                var userid = Strophe.getNodeFromJid(from);
+                
+                $(document).trigger('ofmeet.user.active', [{id: userid, name: conference, to: to}]);
+            }
+            
+            return true;
+        });
+        
+        $(message).find('inactive').each(function ()   
+        {
+            var jid = $(this).attr("jid");
+            var from = $(this).attr("from");
+            var to = $(this).attr("to");
+            
+            if (jid && from && to)
+            {
+                var conference = Strophe.getNodeFromJid(jid);
+                var userid = Strophe.getNodeFromJid(from);
+                
+                $(document).trigger('ofmeet.user.inactive', [{id: userid, name: conference, to: to}]);
+            }
+            
+            return true;
+        });        
+        
         $(message).find('gone').each(function ()   
         {
             var jid = $(this).attr("jid");
@@ -24,14 +71,15 @@ function fetchEtherlynks(callback)
                 
                 $(document).trigger('ofmeet.user.gone', [{id: userid, name: conference}]);
             }
+            
+            return true;
         });
         
         $(message).find('composing').each(function ()      
         {
-            composing = true;
-        });
-
-        $(document).trigger('ofmeet.conversation.composing', [{id: id}]);          
+            $(document).trigger('ofmeet.conversation.composing', [{id: id}]);  
+            return true;
+        });        
         
         $(message).find('x').each(function ()   
         {
@@ -158,7 +206,9 @@ function fetchEtherlynks(callback)
                 pinned: "false", 
                 id: id,
                 jid: jid,
+                presence: lynkUI.presence[jid],
                 open: "false", 
+                active: false,
                 server: server, 
                 domain: domain
             });         
@@ -187,6 +237,28 @@ function leaveConference(lynk)
     try {
         var jid = lynk.etherlynk + "@conference." + lynk.domain;    
         etherlynk.connection.send($msg({to: lynk.jid, type: "chat"}).c("gone", {xmlns: "http://jabber.org/protocol/chatstates", jid: jid}).up());
+    } catch (e) {           
+        console.error(e);
+    }
+}
+
+function broadcastConference(lynk, state)
+{
+    try {
+        var items = Object.getOwnPropertyNames(lynkUI.presence);   
+
+        for(var z = 0; z< items.length; z++)
+        {
+            var target = items[z];
+            
+            var jid = lynk.etherlynk + "@conference." + lynk.domain; 
+            var from = lynkUI.username + "@" + lynkUI.domain;
+            var to = lynk.jid;
+
+            etherlynk.connection.send($msg({to: target, type: "chat"}).c(state, {xmlns: "http://jabber.org/protocol/chatstates", jid: jid, from: from, to: to}).up());            
+            
+        }
+        
     } catch (e) {           
         console.error(e);
     }

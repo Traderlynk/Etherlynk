@@ -8,18 +8,21 @@ function reloadApp()
 
 function startTone(name)
 {
-    if (!lynkUI.ringtone)
-    {
-        lynkUI.ringtone = new Audio();
-        lynkUI.ringtone.loop = true;
+    if (window.localStorage["store.settings.enableRingtone"] && JSON.parse(window.localStorage["store.settings.enableRingtone"]))
+    {    
+        if (!lynkUI.ringtone)
+        {
+            lynkUI.ringtone = new Audio();
+            lynkUI.ringtone.loop = true;
+        }
+
+        lynkUI.ringtone.src = chrome.extension.getURL("ringtones/" + name + ".mp3");    
+        lynkUI.ringtone.play();    
     }
-    
-    lynkUI.ringtone.src = chrome.extension.getURL("ringtones/" + name + ".mp3");    
-    lynkUI.ringtone.play();    
 }
 
 function stopTone()
-{
+{    
     if (lynkUI.ringtone)
     {
         lynkUI.ringtone.pause();
@@ -369,6 +372,7 @@ window.addEventListener("load", function()
         lynkUI.domain = JSON.parse(window.localStorage["store.settings.domain"]);   
         lynkUI.username = JSON.parse(window.localStorage["store.settings.username"]);   
         lynkUI.password = JSON.parse(window.localStorage["store.settings.password"]);
+        lynkUI.jid = lynkUI.username + "@" + lynkUI.domain;
         
         chrome.browserAction.setBadgeBackgroundColor({ color: '#ff0000' });
         chrome.browserAction.setBadgeText({ text: 'off' });
@@ -384,7 +388,7 @@ window.addEventListener("load", function()
             if (window.localStorage["store.settings.enableSip"] && JSON.parse(window.localStorage["store.settings.enableSip"]))
             {
                 lynkUI.enableSip = true;
-            }
+            }            
             
             etherlynk.login(lynkUI.server, lynkUI.domain, lynkUI.username, lynkUI.password);            
 

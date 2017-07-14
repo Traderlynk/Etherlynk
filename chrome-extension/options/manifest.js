@@ -63,6 +63,13 @@ this.manifest = {
             "name": "enableSip",
             "type": "checkbox",
             "label": i18n.get("Enable SIP")
+        },        
+        {
+            "tab": i18n.get("configuration"),
+            "group": i18n.get("Preferences"),
+            "name": "enableRingtone",
+            "type": "checkbox",
+            "label": i18n.get("Enable Ringtone")
         }              
     ],
     "alignment": [

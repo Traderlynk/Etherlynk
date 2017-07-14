@@ -66,6 +66,7 @@ customElements.define('tl-etherlynk', class extends HTMLElement {
           height:40px;
           width:75px;
           float:left;
+          color: #848080;
           border-radius:5px;
           overflow: hidden;
           margin:4px;
@@ -114,7 +115,11 @@ customElements.define('tl-etherlynk', class extends HTMLElement {
           border-radius:5px;
           margin: 15px 0 0 16px;
         }
-        
+
+        .gray{
+          font-weight: bold;
+          color:#000;
+        }        
         .red{
           background-color:red;
           color:#fff;
@@ -137,14 +142,14 @@ customElements.define('tl-etherlynk', class extends HTMLElement {
 
         .redflash{
           background-color: red;
-          color: black;
+          color: #fff;
           animation: backgroundblinker .5s step-end infinite alternate;
           -webkit-animation: backgroundblinker .5s step-end infinite alternate;
         }
 
         .yellowflash{
           background-color: yellow;
-          color: black;
+          color: #fff;
           animation: backgroundblinker .5s step-end infinite alternate;
           -webkit-animation: backgroundblinker .5s step-end infinite alternate;
         }
