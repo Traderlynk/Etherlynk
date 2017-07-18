@@ -6,6 +6,7 @@ function getEtherlynks()
     lynkUI.actions = [];
     lynkUI.currentLynk = null;
     lynkUI.presence = {};
+    lynkUI.participants = {};
     
     resetMidiLights()
     
@@ -40,10 +41,8 @@ function getEtherlynks()
     });
 
     $(document).bind("ofmeet.user.active", function(event, activity)
-    {       
-        console.log('ofmeet.user.active', activity);
-        
-        if (activity.from == lynkUI.username) return;
+    {              
+        if (activity.id == lynkUI.username) return;
         
         for(var z = 0; z<lynkUI.calls.length; z++)
         {
@@ -53,7 +52,13 @@ function getEtherlynks()
 
                 if (activity.to == lynk.jid)
                 {
-                    //if (!lynk.active) changeButton(parseInt(lynk.pinId), "yellow", lynk.name); 
+                    console.log('ofmeet.user.active', activity, lynk);
+                
+                    changeButton(parseInt(lynk.pinId), "yellow", lynk.name); 
+                    lynk.etherlynk = activity.name;
+                    
+                    if (!lynkUI.participants[activity.name]) lynkUI.participants[activity.name] = 0;
+                    lynkUI.participants[activity.name]++;
                     break;                
                 }
             }
@@ -61,10 +66,13 @@ function getEtherlynks()
     });
     
     $(document).bind("ofmeet.user.inactive", function(event, activity)
-    {       
-        console.log('ofmeet.user.inactive', activity);
+    {              
+        if (activity.id == lynkUI.username) return;  
         
-        if (activity.from == lynkUI.username) return;        
+        if (lynkUI.currentLynk && lynkUI.currentLynk.jid == activity.to)
+        {
+            clearActiveButton();  
+        }        
         
         for(var z = 0; z<lynkUI.calls.length; z++)
         {
@@ -74,7 +82,11 @@ function getEtherlynks()
 
                 if (activity.to == lynk.jid)
                 {
-                    //if (!lynk.active) changeButton(parseInt(lynk.pinId), null, lynk.name); 
+                    console.log('ofmeet.user.inactive', activity, lynk);
+
+                    lynkUI.participants[activity.name]--;                                    
+                    changeButton(parseInt(lynk.pinId), lynk.presence, lynk.name); 
+
                     break;                
                 }
             }
@@ -167,7 +179,7 @@ function getEtherlynks()
     
     $(document).bind('ofmeet.conference.left', function(event, conf)
     {       
-        console.log('ofmeet.media.left', event, conf);
+        console.log('ofmeet.conference.left', event, conf);
         
         for(var z = 0; z<lynkUI.conferences.length; z++)
         {
@@ -177,7 +189,8 @@ function getEtherlynks()
 
                 if (conf.name == lynk.etherlynk)
                 {
-                    changeButton(64 + parseInt(lynk.pinId), lynk.presence, lynk.name);
+                    var color = lynkUI.participants[lynk.etherlynk] && lynkUI.participants[lynk.etherlynk] > 0 ? "yellow" : lynk.presence;
+                    changeButton(64 + parseInt(lynk.pinId), color, lynk.name);
                     break;
                 }
             }
@@ -186,6 +199,7 @@ function getEtherlynks()
         if (lynkUI.currentLynk)
         {
             clearActiveButton();           
+            setActiveLynk(null);
         }       
     });
 
@@ -211,31 +225,30 @@ function getEtherlynks()
     
     $(document).bind('ofmeet.user.gone', function(event, conf)
     {   
-        console.log('ofmeet.user.gone', conf);    
-        try { 
+        console.log('ofmeet.user.gone', conf, lynkUI.participants[conf.name]);   
         
-            chrome.notifications.clear(conf.name, function(wasCleared)
-            {
-                console.log("call cleared", wasCleared);
-            }); 
-            
-            for(var z = 0; z<lynkUI.calls.length; z++)
-            {
-                if (lynkUI.calls[z])
-                {                 
-                    var lynk = lynkUI.calls[z].lynk;
+        if (conf.id == lynkUI.username) return;             
+                    
+        for(var z = 0; z<lynkUI.calls.length; z++)
+        {
+            if (lynkUI.calls[z])
+            {                 
+                var lynk = lynkUI.calls[z].lynk;
 
-                    if (conf.name == lynk.etherlynk)
-                    {                     
-                        changeButton(parseInt(lynk.pinId), lynk.presence, lynk.name);
-                        break;                    
-                    }
+                if (conf.user == lynk.jid && conf.name == lynk.etherlynk)
+                {  
+                    changeButton(parseInt(lynk.pinId), lynk.presence, lynk.name);
+
+                    chrome.notifications.clear(conf.name, function(wasCleared)
+                    {
+                        console.log("call cleared", wasCleared);
+                    }); 
+
+                    etherlynk.leave(conf.name);
+                    break;                    
                 }
             }
-            
-            etherlynk.leave(conf.name); 
-            
-        } catch (e) {}  
+        }  
     }); 
     
 }
@@ -374,6 +387,7 @@ function clearActiveCall()
     if (lynkUI.currentLynk)
     {
         clearActiveButton();        
+        setActiveLynk(null);
         etherlynk.leave(lynkUI.currentLynk.etherlynk);        
     }
 }
@@ -387,10 +401,9 @@ function clearActiveButton()
             console.log("call cleared", wasCleared);
         });
         
-        changeButton(parseInt(lynkUI.currentLynk.pinId), lynkUI.currentLynk.presence, lynkUI.currentLynk.name);
+        var color = lynkUI.participants[lynkUI.currentLynk.etherlynk] && lynkUI.participants[lynkUI.currentLynk.etherlynk] > 0 ? "yellow" : lynkUI.currentLynk.presence;
+        changeButton(parseInt(lynkUI.currentLynk.pinId), color, lynkUI.currentLynk.name);
         changeButton(98, null, "CLEAR");
-        
-        setActiveLynk(null);
     }
 }
 
@@ -403,7 +416,7 @@ function setActiveLynk(lynk)
         
     } else {
         lynkUI.currentLynk.active = false;
-        broadcastConference(lynkUI.currentLynk, "inactive");
+        if (!lynkUI.currentLynk.barge) broadcastConference(lynkUI.currentLynk, "inactive");
     }
         
     lynkUI.currentLynk = lynk; 
@@ -436,7 +449,7 @@ function handleButtonPress(button)
         }
         else
         
-        if (data.button[1] == "redflash")
+        if (data.button[1] == "redflash")           // ringing
         {
             clearActiveCall();
             
@@ -450,25 +463,33 @@ function handleButtonPress(button)
         }       
         else
         
-        if (data.button[1] == "green")
+        if (data.button[1] == "green")             // connected
         {
             etherlynk.mute(data.lynk.etherlynk);
             changeButton(button, "red", data.button[2])
         }       
         else
         
-        if (data.button[1] == "red")
+        if (data.button[1] == "red")               // held/muted
         {
             etherlynk.mute(data.lynk.etherlynk);
             changeButton(button, "green", data.button[2])
         }       
         else
         
-        if (data.button[1] == "greenflash")
+        if (data.button[1] == "greenflash")       // originate/delivered
         {
             changeButton(button, data.lynk.presence, data.button[2])
             etherlynk.leave(data.lynk.etherlynk);            
-        }       
+        }    
+        else
+        
+        if (data.button[1] == "yellow")       // busy elsewhere
+        {
+            lynkUI.currentLynk = data.lynk;         
+            lynkUI.currentLynk.barge = true;
+            etherlynk.join(data.lynk.etherlynk);         
+        }         
         
     }
     else

@@ -26,7 +26,7 @@ function fetchEtherlynks(callback)
         
         console.log("message handler", from, to, type)      
 
-        $(message).find('active').each(function ()   
+        $(message).find('active').each(function ()      // user joins conversation
         {
             var jid = $(this).attr("jid");
             var from = $(this).attr("from");
@@ -43,7 +43,7 @@ function fetchEtherlynks(callback)
             return true;
         });
         
-        $(message).find('inactive').each(function ()   
+        $(message).find('inactive').each(function ()   // user actually leaves conversation
         {
             var jid = $(this).attr("jid");
             var from = $(this).attr("from");
@@ -60,7 +60,7 @@ function fetchEtherlynks(callback)
             return true;
         });        
         
-        $(message).find('gone').each(function ()   
+        $(message).find('gone').each(function ()   // user signals to leave conversation
         {
             var jid = $(this).attr("jid");
             
@@ -69,7 +69,7 @@ function fetchEtherlynks(callback)
                 var conference = Strophe.getNodeFromJid(jid);
                 var userid = Strophe.getNodeFromJid(from);
                 
-                $(document).trigger('ofmeet.user.gone', [{id: userid, name: conference}]);
+                $(document).trigger('ofmeet.user.gone', [{id: userid, name: conference, user: Strophe.getBareJidFromJid(from)}]);
             }
             
             return true;
@@ -232,7 +232,7 @@ function inviteToConference(lynk)
 }
 
 
-function leaveConference(lynk)
+function leaveConference(lynk)      // user action event to far party
 {
     try {
         var jid = lynk.etherlynk + "@conference." + lynk.domain;    
@@ -242,7 +242,7 @@ function leaveConference(lynk)
     }
 }
 
-function broadcastConference(lynk, state)
+function broadcastConference(lynk, state)       // user feedback event to all participants
 {
     try {
         var items = Object.getOwnPropertyNames(lynkUI.presence);   
