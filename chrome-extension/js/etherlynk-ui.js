@@ -10,7 +10,7 @@ function getEtherlynks()
     
     resetMidiLights()
     
-    fetchEtherlynks(function(lynk)
+    etherlynkXmpp.fetchEtherlynks(function(lynk)
     {   
         handleEtherlynk(lynk);
     });
@@ -128,7 +128,7 @@ function getEtherlynks()
                         {
                             changeButton(parseInt(lynk.pinId), lynk.presence, lynk.name); 
                             if (lynkUI.ringtone) stopTone();
-                            leaveConference(lynk);
+                            etherlynkXmpp.leaveConference(lynk);
                         }                   
 
                     }, room);                   
@@ -169,7 +169,7 @@ function getEtherlynks()
 
                 if (buttonIndex == 0)   // terminate
                 {
-                    leaveConference(lynkUI.currentLynk);
+                    etherlynkXmpp.leaveConference(lynkUI.currentLynk);
                     etherlynk.leave(lynkUI.currentLynk.etherlynk);                        
                 }                 
 
@@ -227,7 +227,14 @@ function getEtherlynks()
     {   
         console.log('ofmeet.user.gone', conf, lynkUI.participants[conf.name]);   
         
-        if (conf.id == lynkUI.username) return;             
+        if (conf.id == lynkUI.username) return; 
+        
+        if (lynkUI.ringtone) stopTone();          
+
+        chrome.notifications.clear(conf.name, function(wasCleared)
+        {
+            console.log("call cleared", wasCleared);
+        }); 
                     
         for(var z = 0; z<lynkUI.calls.length; z++)
         {
@@ -238,24 +245,19 @@ function getEtherlynks()
                 if (conf.user == lynk.jid && conf.name == lynk.etherlynk)
                 {  
                     changeButton(parseInt(lynk.pinId), lynk.presence, lynk.name);
-
-                    chrome.notifications.clear(conf.name, function(wasCleared)
-                    {
-                        console.log("call cleared", wasCleared);
-                    }); 
-
-                    etherlynk.leave(conf.name);
                     break;                    
                 }
             }
-        }  
+        } 
+        
+        etherlynk.leave(conf.name);                
     }); 
     
 }
 
 function handleEtherlynk(lynk)
 {
-    console.log("handleEtherlynk", lynk);
+    console.log("F", lynk);
     
     if (!lynk.pinId) return;
     
@@ -412,11 +414,11 @@ function setActiveLynk(lynk)
     if (lynk)
     {
         lynk.active = true;
-        broadcastConference(lynk, "active");
+        etherlynkXmpp.broadcastConference(lynk, "active");
         
     } else {
         lynkUI.currentLynk.active = false;
-        if (!lynkUI.currentLynk.barge) broadcastConference(lynkUI.currentLynk, "inactive");
+        if (!lynkUI.currentLynk.barge) etherlynkXmpp.broadcastConference(lynkUI.currentLynk, "inactive");
     }
         
     lynkUI.currentLynk = lynk; 
@@ -443,7 +445,7 @@ function handleButtonPress(button)
             if (data.lynk.jid)
             {
                 setActiveLynk(data.lynk);             
-                inviteToConference(data.lynk);              
+                etherlynkXmpp.inviteToConference(data.lynk);              
             }
             
         }
@@ -515,7 +517,7 @@ function handleButtonPress(button)
     {
         if (lynkUI.currentLynk)
         {
-            leaveConference(lynkUI.currentLynk);
+            etherlynkXmpp.leaveConference(lynkUI.currentLynk);
             etherlynk.leave(lynkUI.currentLynk.etherlynk);            
         }
         
@@ -533,7 +535,7 @@ function handleButtonHeld(button)
     {
         if (data.button[1] == "greenflash" || data.button[1] == "red" || data.button[1] == "green")
         {
-            leaveConference(data.lynk);
+            etherlynkXmpp.leaveConference(data.lynk);
             etherlynk.leave(data.lynk.etherlynk);            
         }       
     }
