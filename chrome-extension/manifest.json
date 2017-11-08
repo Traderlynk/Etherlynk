@@ -6,7 +6,7 @@
 
   "name": "Etherlynk Communicator",
   "description": "Etherlynk Communicator is a decentralized communications application for Ethereum",
-  "version": "0.0.11",
+  "version": "0.0.12",
     
   "background": {
         "persistent": true,
@@ -51,7 +51,7 @@
   ],
   "externally_connectable": {
       "matches": [
-          "*://traderlynk.net/*", "*://btg199251/*", "*://wtlkd001/*", "*://tllt0002/*", "*://10.77.164.249/*"
+          "*://traderlynk.net/*", "*://desktop-545pc5b/*", "*://btg199251/*", "*://wtlkd001/*", "*://tllt0002/*", "*://10.77.164.249/*"
       ]
   }
 }
