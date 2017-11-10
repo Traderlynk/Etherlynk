@@ -1,6 +1,6 @@
 var lynkUI = {}
 var callbacks = {}
-    
+
 function reloadApp()
 {
     chrome.runtime.reload();
@@ -9,20 +9,20 @@ function reloadApp()
 function startTone(name)
 {
     if (window.localStorage["store.settings.enableRingtone"] && JSON.parse(window.localStorage["store.settings.enableRingtone"]))
-    {    
+    {
         if (!lynkUI.ringtone)
         {
             lynkUI.ringtone = new Audio();
             lynkUI.ringtone.loop = true;
         }
 
-        lynkUI.ringtone.src = chrome.extension.getURL("ringtones/" + name + ".mp3");    
-        lynkUI.ringtone.play();    
+        lynkUI.ringtone.src = chrome.extension.getURL("ringtones/" + name + ".mp3");
+        lynkUI.ringtone.play();
     }
 }
 
 function stopTone()
-{    
+{
     if (lynkUI.ringtone)
     {
         lynkUI.ringtone.pause();
@@ -36,18 +36,18 @@ function stopTone()
  */
 
 function notifyText(message, context, iconUrl, buttons, callback, notifyId)
-{           
+{
     var opt = {
       type: "basic",
-      title: "TraderLynk",        
+      title: "TraderLynk",
       iconUrl: iconUrl ? iconUrl : chrome.extension.getURL("tl_icon.png"),
 
       message: message,
-      buttons: buttons,       
+      buttons: buttons,
       contextMessage: context,
       requireInteraction: !!buttons && !!callback
     }
-    if (!notifyId) notifyId = Math.random().toString(36).substr(2,9); 
+    if (!notifyId) notifyId = Math.random().toString(36).substr(2,9);
 
     chrome.notifications.create(notifyId, opt, function(notificationId)
     {
@@ -56,59 +56,59 @@ function notifyText(message, context, iconUrl, buttons, callback, notifyId)
 };
 
 function notifyImage(message, context, imageUrl, buttons, callback)
-{           
+{
     var opt = {
       type: "image",
-      title: "TraderLynk",        
+      title: "TraderLynk",
       iconUrl: chrome.extension.getURL("tl_icon.png"),
 
-      message: message, 
-      buttons: buttons,       
+      message: message,
+      buttons: buttons,
       contextMessage: context,
       imageUrl: imageUrl
     }
-    var id = Math.random().toString(36).substr(2,9); 
+    var id = Math.random().toString(36).substr(2,9);
 
     chrome.notifications.create(id, opt, function(notificationId)
     {
         if (callback) callbacks[notificationId] = callback;
     });
-};      
+};
 
 function notifyProgress(message, context, progress, buttons, callback)
-{           
+{
     var opt = {
       type: "progress",
-      title: "TraderLynk",        
+      title: "TraderLynk",
       iconUrl: chrome.extension.getURL("tl_icon.png"),
 
-      message: message, 
-      buttons: buttons,       
+      message: message,
+      buttons: buttons,
       contextMessage: context,
       progress: progress
     }
-    var id = Math.random().toString(36).substr(2,9); 
+    var id = Math.random().toString(36).substr(2,9);
 
     chrome.notifications.create(id, opt, function(notificationId)
     {
         if (callback) callbacks[notificationId] = callback;
     });
-};  
+};
 
 
 function notifyList(message, context, items, buttons, callback)
-{           
+{
     var opt = {
       type: "list",
-      title: "TraderLynk",        
+      title: "TraderLynk",
       iconUrl: chrome.extension.getURL("tl_icon.png"),
 
-      message: message, 
-      buttons: buttons,       
+      message: message,
+      buttons: buttons,
       contextMessage: context,
       items: items
     }
-    var id = Math.random().toString(36).substr(2,9); 
+    var id = Math.random().toString(36).substr(2,9);
 
     chrome.notifications.create(id, opt, function(notificationId){
         if (callback) callbacks[notificationId] = callback;
@@ -130,15 +130,15 @@ function openChatWindow(focus)
 
     if (lynkUI.chatWindow == null)
     {
-        chrome.windows.create({url: url, focused: focus, type: "popup"}, function (win) 
+        chrome.windows.create({url: url, focused: focus, type: "popup"}, function (win)
         {
             lynkUI.chatWindow = win;
             chrome.windows.update(lynkUI.chatWindow.id, {drawAttention: focus, width: 800, height: 600});
         });
 
     } else {
-        chrome.windows.update(lynkUI.chatWindow.id, {drawAttention: true, width: 800, height: 600});        
-    }   
+        chrome.windows.update(lynkUI.chatWindow.id, {drawAttention: true, width: 800, height: 600});
+    }
 }
 
 function doOptions()
@@ -146,7 +146,7 @@ function doOptions()
     chrome.tabs.getAllInWindow(null, function(tabs)
     {
         var setupUrl = chrome.extension.getURL('options/index.html');
-        
+
         if (tabs)
         {
             var option_tab = tabs.filter(function(t) { return t.url === setupUrl; });
@@ -159,59 +159,59 @@ function doOptions()
             chrome.tabs.create({url: setupUrl, active: true});
             }
         }
-    });         
+    });
 }
 
-window.addEventListener("load", function() 
+window.addEventListener("load", function()
 {
-    console.log("loaded");  
-    
-         document.body.addEventListener('webmidievent', function (e) 
-         {
-            //console.log("webmidievent", e);
-            
-            if (lynkUI.popup && e.detail.data1 == 176)
-            {
-                lynkUI.port.postMessage({value1: e.detail.data1, value2: e.detail.data2, value3: e.detail.data3});
-            }
-            
-            handleSlider(e.detail.data2, e.detail.data3);
-            
-            if (e.detail.data1 == 144)
-            {
-                handleButtonPress(e.detail.data2);
-                
-                lynkUI.timeouts[e.detail.data2] = setTimeout(function()
-                {
-                    handleButtonHeld(e.detail.data2);
-                    
-                }, 500);
-            }
-            else
-            
-            if (e.detail.data1 == 128)
-            {
-                clearTimeout(lynkUI.timeouts[e.detail.data2])
-                delete lynkUI.timeouts[e.detail.data2]
-            }
+    console.log("loaded");
 
-         }, false); 
-    
-    Strophe.addConnectionPlugin('etherlynk', 
+	 document.body.addEventListener('webmidievent', function (e)
+	 {
+		//console.log("webmidievent", e);
+
+		if (lynkUI.popup && e.detail.data1 == 176)
+		{
+			lynkUI.port.postMessage({value1: e.detail.data1, value2: e.detail.data2, value3: e.detail.data3});
+		}
+
+		handleSlider(e.detail.data2, e.detail.data3);
+
+		if (e.detail.data1 == 144)
+		{
+			handleButtonPress(e.detail.data2);
+
+			lynkUI.timeouts[e.detail.data2] = setTimeout(function()
+			{
+				handleButtonHeld(e.detail.data2);
+
+			}, 500);
+		}
+		else
+
+		if (e.detail.data1 == 128)
+		{
+			clearTimeout(lynkUI.timeouts[e.detail.data2])
+			delete lynkUI.timeouts[e.detail.data2]
+		}
+
+	 }, false);
+
+    Strophe.addConnectionPlugin('etherlynk',
     {
-        init: function (connection) 
+        init: function (connection)
         {
-            console.log("strophe plugin: etherlynk enabled", connection.jid);       
+            console.log("strophe plugin: etherlynk enabled", connection.jid);
             this.connection = connection;
 
             this.connection.addHandler(function(message)
             {
-                $(message).find('etherlynk').each(function ()   
+                $(message).find('etherlynk').each(function ()
                 {
                     try {
                         var json = JSON.parse($(this).text());
 
-                        if (json.event) handleEvent(json, $(message).attr("to"));                       
+                        if (json.event) handleEvent(json, $(message).attr("to"));
                         if (json.action) handleAction(json, $(message).attr("to"));
 
                     } catch (e) {}
@@ -219,75 +219,75 @@ window.addEventListener("load", function()
 
                 return true;
 
-            }, "jabber:x:etherlynk", 'message');            
-        },  
+            }, "jabber:x:etherlynk", 'message');
+        },
         statusChanged: function(status, condition)
         {
             console.log("strophe plugin: statusChanged", this.connection.jid);
-            
+
             if (Strophe.getNodeFromJid(this.connection.jid) != lynkUI.username) return;
 
             if (status == 5)
             {
-                console.log("XMPPConnection.connected");                        
+                console.log("XMPPConnection.connected");
                 chrome.browserAction.setBadgeText({ text: "" });
 
                 getEtherlynks();
             }
-            else 
+            else
 
             if (status == 6)
             {
-                console.log("XMPPConnection.disconnected");             
+                console.log("XMPPConnection.disconnected");
                 chrome.browserAction.setBadgeText({ text: "off" });
-            }   
+            }
         }
-    }); 
-    
+    });
+
     chrome.contextMenus.removeAll();
-    
-    chrome.contextMenus.create({title: "Etherlynk Chat", contexts: ["browser_action"],  onclick: function() 
+
+    chrome.contextMenus.create({title: "Etherlynk Chat", contexts: ["browser_action"],  onclick: function()
     {
         openChatWindow();
-    }});    
-    
-    chrome.runtime.onConnect.addListener(function(port) 
+    }});
+
+    chrome.runtime.onConnect.addListener(function(port)
     {
-        console.log("popup connect");   
+        console.log("popup connect");
         lynkUI.popup = true;
         lynkUI.port = port;
-                
-        port.onMessage.addListener(function(msg) 
-        {                       
+
+        port.onMessage.addListener(function(msg)
+        {
             if (msg.event == "etherlynk.event.buttondown")
             {
                 handleButtonPress(msg.button);
             }
-            
+
             if (msg.event == "etherlynk.event.held")
             {
                 handleButtonHeld(msg.button);
             }
-            
+
             if (msg.event == "etherlynk.event.slider")
             {
                 handleSlider(msg.slider, msg.value);
-            }                       
+            }
         });
-        
-        port.onDisconnect.addListener(function() 
+
+        port.onDisconnect.addListener(function()
         {
             console.log("popup disconnect");
             lynkUI.popup = false;
             lynkUI.port = null;
-        });     
-    }); 
-    
-    chrome.runtime.onMessageExternal.addListener(function(request, sender, sendResponse) 
+        });
+    });
+
+    chrome.runtime.onMessageExternal.addListener(function(request, sender, sendResponse)
     {
         console.log("Got deskshare request", request, sender);
 
-        if(request.getVersion) 
+        if(request.getVersion)
         {
             sendResponse({ version: chrome.runtime.getManifest().version });
             return false;
@@ -303,7 +303,7 @@ window.addEventListener("load", function()
             function(streamId) {
                 sendResponse({ streamId: streamId });
             });
-            return true; 
+            return true;
 
         } else {
             console.error("Unknown request");
@@ -314,30 +314,30 @@ window.addEventListener("load", function()
 
     chrome.notifications.onButtonClicked.addListener(function(notificationId, buttonIndex)
     {
-        var callback = callbacks[notificationId];   
+        var callback = callbacks[notificationId];
 
         if (callback)
         {
             callback(notificationId, buttonIndex);
-            
+
             callbacks[notificationId] = null;
-            delete callbacks[notificationId];           
+            delete callbacks[notificationId];
 
             chrome.notifications.clear(notificationId, function(wasCleared)
             {
 
             });
         }
-    }); 
-        
+    });
+
     chrome.browserAction.onClicked.addListener(function()
     {
-        doOptions();        
+        doOptions();
     });
-    
+
     chrome.notifications.onButtonClicked.addListener(function(notificationId, buttonIndex)
     {
-        var callback = callbacks[notificationId];   
+        var callback = callbacks[notificationId];
 
         if (callback)
         {
@@ -350,33 +350,36 @@ window.addEventListener("load", function()
             });
         }
     });
-    
-    chrome.windows.onRemoved.addListener(function(win) 
+
+    chrome.windows.onRemoved.addListener(function(win)
     {
-        console.log("closing window ", win);    
-        
+        console.log("closing window ", win);
+
         if (lynkUI.chatWindow && win == lynkUI.chatWindow.id)
-        {               
+        {
             lynkUI.chatWindow = null;
+
+            changeButton(82, null, "Open<br/>Chat")
         }
-        
+
         if (lynkUI.videoWindow && win == lynkUI.videoWindow.id)
-        {               
+        {
             lynkUI.videoWindow = null;
-        }               
-    }); 
-    
+            changeButton(83, null, "Open<br/>Video")
+        }
+    });
+
     if (window.localStorage["store.settings.server"] && window.localStorage["store.settings.domain"] && window.localStorage["store.settings.username"] && window.localStorage["store.settings.password"])
     {
         lynkUI.server = JSON.parse(window.localStorage["store.settings.server"]);
-        lynkUI.domain = JSON.parse(window.localStorage["store.settings.domain"]);   
-        lynkUI.username = JSON.parse(window.localStorage["store.settings.username"]);   
+        lynkUI.domain = JSON.parse(window.localStorage["store.settings.domain"]);
+        lynkUI.username = JSON.parse(window.localStorage["store.settings.username"]);
         lynkUI.password = JSON.parse(window.localStorage["store.settings.password"]);
         lynkUI.jid = lynkUI.username + "@" + lynkUI.domain;
-        
+
         chrome.browserAction.setBadgeBackgroundColor({ color: '#ff0000' });
         chrome.browserAction.setBadgeText({ text: 'off' });
-        
+
 
         if (lynkUI.server && lynkUI.domain && lynkUI.username && lynkUI.password)
         {
@@ -384,27 +387,26 @@ window.addEventListener("load", function()
             {
                 Tletherlynk.Midi.init()
             }
-            
+
             if (window.localStorage["store.settings.enableSip"] && JSON.parse(window.localStorage["store.settings.enableSip"]))
             {
                 lynkUI.enableSip = true;
-            }            
-            
-            etherlynk.login(lynkUI.server, lynkUI.domain, lynkUI.username, lynkUI.password);            
+            }
+
+            etherlynk.login(lynkUI.server, lynkUI.domain, lynkUI.username, lynkUI.password);
 
         } else doOptions();
-        
+
     } else doOptions();
 });
 
-window.addEventListener("beforeunload", function () 
+window.addEventListener("beforeunload", function ()
 {
-    if (lynkUI.window) chrome.windows.remove(lynkUI.window.id); 
+    if (lynkUI.window) chrome.windows.remove(lynkUI.window.id);
     etherlynk.logoff();
 });
 
-window.addEventListener("unload", function () 
+window.addEventListener("unload", function ()
 {
-    etherlynk.logoff(); 
+    etherlynk.logoff();
 });
-    

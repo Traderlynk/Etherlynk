@@ -6,7 +6,7 @@
 
   "name": "Etherlynk Communicator",
   "description": "Etherlynk Communicator is a decentralized communications application for Ethereum",
-  "version": "0.0.12",
+  "version": "0.0.13",
     
   "background": {
         "persistent": true,
