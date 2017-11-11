@@ -591,6 +591,14 @@ var etherlynk = (function(lynk)
         }
     }
 
+    lynk.muteLocal = function(name, flag)
+    {
+        if (lynk.localAudioTracks[name])
+        {
+            lynk.localAudioTracks[name].track.enabled = !flag;
+        }
+    }
+
     lynk.leave = function(name)
     {
 

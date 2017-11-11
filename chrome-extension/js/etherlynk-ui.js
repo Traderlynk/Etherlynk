@@ -108,32 +108,47 @@ function getEtherlynks()
 
                 if (jid == lynk.jid)
                 {
-                    changeButton(parseInt(lynk.pinId), "redflash", lynk.name);
-                    startTone("Diggztone_Vibe");
+					if (invite.autoAccept)
+					{
+						lynk.etherlynk = room;
+						lynk.autoAccept = true;
 
-                    lynk.etherlynk = room;
+						etherlynk.join(lynk.etherlynk, lynk.server, lynk.domain, {mute: true});
+						setActiveLynk(lynk);
 
-                    notifyText(lynk.name, lynk.jid, null, [{title: "Accept Conversation?", iconUrl: chrome.extension.getURL("success-16x16.gif")}, {title: "Reject Conversation?", iconUrl: chrome.extension.getURL("forbidden-16x16.gif")}], function(notificationId, buttonIndex)
-                    {
-                        console.log("handleAction callback", notificationId, buttonIndex);
+						etherlynk.muteLocal(lynk.etherlynk, true);
+						changeButton(parseInt(lynk.pinId), "red", lynk.name);
+            			startTone("ringback-uk");
+					}
+					else {
+						changeButton(parseInt(lynk.pinId), "redflash", lynk.name);
+						startTone("Diggztone_Vibe");
 
-                        if (buttonIndex == 0)   // accept
-                        {
-                            etherlynk.join(lynk.etherlynk, lynk.server, lynk.domain);
-                            setActiveLynk(lynk);
-                        }
-                        else
+						lynk.etherlynk = room;
+						lynk.autoAccept = false;
 
-                        if (buttonIndex == 1)   // reject
-                        {
-                            changeButton(parseInt(lynk.pinId), lynk.presence, lynk.name);
-                            if (lynkUI.ringtone) stopTone();
-                            etherlynkXmpp.leaveConference(lynk);
-                        }
+						notifyText(lynk.name, lynk.jid, null, [{title: "Accept Conversation?", iconUrl: chrome.extension.getURL("success-16x16.gif")}, {title: "Reject Conversation?", iconUrl: chrome.extension.getURL("forbidden-16x16.gif")}], function(notificationId, buttonIndex)
+						{
+							console.log("handleAction callback", notificationId, buttonIndex);
 
-                    }, room);
+							if (buttonIndex == 0)   // accept
+							{
+								etherlynk.join(lynk.etherlynk, lynk.server, lynk.domain);
+								setActiveLynk(lynk);
+							}
+							else
 
-                    break;
+							if (buttonIndex == 1)   // reject
+							{
+								changeButton(parseInt(lynk.pinId), lynk.presence, lynk.name);
+								if (lynkUI.ringtone) stopTone();
+								etherlynkXmpp.leaveConference(lynk);
+							}
+
+						}, room);
+					}
+
+					break;
                 }
             }
         }
@@ -160,7 +175,10 @@ function getEtherlynks()
 
         if (lynkUI.currentLynk)
         {
-            changeButton(parseInt(lynkUI.currentLynk.pinId), "green", lynkUI.currentLynk.name);
+			var status = "green";
+			if (lynkUI.currentLynk.autoAccept) status = "red";
+
+            changeButton(parseInt(lynkUI.currentLynk.pinId), status, lynkUI.currentLynk.name);
             changeButton(98, "green", "CLEAR");
 
             notifyText(lynkUI.currentLynk.name, lynkUI.currentLynk.jid, null, [{title: "Clear Conversation?", iconUrl: chrome.extension.getURL("success-16x16.gif")}], function(notificationId, buttonIndex)
