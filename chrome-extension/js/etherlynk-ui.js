@@ -108,9 +108,11 @@ function getEtherlynks()
 
                 if (jid == lynk.jid)
                 {
+					lynk.etherlynk = room;
+					lynk.mode = invite.mode;
+
 					if (invite.autoAccept)
 					{
-						lynk.etherlynk = room;
 						lynk.autoAccept = true;
 
 						etherlynk.join(lynk.etherlynk, lynk.server, lynk.domain, {mute: true});
@@ -124,7 +126,6 @@ function getEtherlynks()
 						changeButton(parseInt(lynk.pinId), "redflash", lynk.name);
 						startTone("Diggztone_Vibe");
 
-						lynk.etherlynk = room;
 						lynk.autoAccept = false;
 
 						notifyText(lynk.name, lynk.jid, null, [{title: "Accept Conversation?", iconUrl: chrome.extension.getURL("success-16x16.gif")}, {title: "Reject Conversation?", iconUrl: chrome.extension.getURL("forbidden-16x16.gif")}], function(notificationId, buttonIndex)
@@ -275,7 +276,7 @@ function getEtherlynks()
 
 function handleEtherlynk(lynk)
 {
-    console.log("F", lynk);
+    console.log("handleEtherlynk", lynk);
 
     if (!lynk.pinId) return;
 
@@ -404,11 +405,12 @@ function handleButton(button, newButton)
 
 function clearActiveCall()
 {
-    if (lynkUI.currentLynk)
+    if (lynkUI.currentLynk && lynkUI.currentLynk.etherlynk)
     {
+        etherlynk.leave(lynkUI.currentLynk.etherlynk);
+
         clearActiveButton();
         setActiveLynk(null);
-        etherlynk.leave(lynkUI.currentLynk.etherlynk);
     }
 }
 
@@ -445,6 +447,8 @@ function setActiveLynk(lynk)
 
 function handleButtonPress(button)
 {
+	// actions for button presses are handled here
+
     var data = handleButton(button);
     console.log("button press", button, data, lynkUI.currentLynk);
 
@@ -544,22 +548,18 @@ function handleButtonPress(button)
 
     if (button == 82) // chat button
     {
-		if (lynkUI.chatWindow != null)
-		{
-			closeChatWindow();
-			changeButton(button, null, "Open<br/>Chat")
-
-		} else {
-			openChatWindow();
-			changeButton(button, "green", "Open<br/>Chat")
-		}
+		changeButton(82, data.button[1] == "green" ? null : "green", "Open<br/>Chat")
     }
 
     if (button == 83) // video button
     {
-		// TODO
+		changeButton(83, data.button[1] == "green" ? null : "green", "Open<br/>Video")
 	}
 
+    if (button == 84) // screen share button
+    {
+		changeButton(84, data.button[1] == "green" ? null : "green", "Screen<br/>Share")
+	}
 }
 
 function handleButtonHeld(button)

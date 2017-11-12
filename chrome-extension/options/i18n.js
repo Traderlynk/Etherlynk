@@ -11,7 +11,7 @@ this.i18n = {
     "nothing-found": {
         "en": "No matches were found.",
         "de": "Keine Übereinstimmungen gefunden."
-    },    
+    },
     "information": {
         "en": "Information",
         "de": "Information"
@@ -19,15 +19,15 @@ this.i18n = {
     "ui": {
         "en": "User Interface",
         "de": "User Interface"
-    },   
+    },
     "intercom": {
         "en": "Intercom",
         "de": "Intercom"
-    },    
+    },
     "configuration": {
         "en": "Configuration",
         "de": "Configuration"
-    },    
+    },
     "login": {
         "en": "Login",
         "de": "Anmeldung"
@@ -35,9 +35,13 @@ this.i18n = {
     "connection": {
         "en": "Connection",
         "de": "Anmeldung"
-    },    
+    },
     "username": {
         "en": "Username:",
+        "de": "Benutzername:"
+    },
+    "displayname": {
+        "en": "Display Name:",
         "de": "Benutzername:"
     },
     "server": {
@@ -47,7 +51,7 @@ this.i18n = {
     "domain": {
         "en": "Domain:",
         "de": "Benutzername:"
-    },    
+    },
     "password": {
         "en": "Password:",
         "de": "Passwort:"
@@ -62,7 +66,7 @@ this.i18n = {
     },
     "description": {
         "en": "",
-        
+
         "de": ""
     },
     "logout": {
@@ -76,7 +80,7 @@ this.i18n = {
     "connect": {
         "en": "Connect:",
         "de": "Trennen:"
-    },    
+    },
     "disconnect": {
         "en": "Disconnect:",
         "de": "Trennen:"

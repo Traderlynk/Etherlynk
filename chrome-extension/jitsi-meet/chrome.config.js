@@ -36,7 +36,7 @@ if (window.localStorage["store.settings.server"])
       "channelLastN": -1,
       "desktopSharingFirefoxDisabled": false,
       "adaptiveLastN": false,
-      "desktopSharingChromeExtId": "fmgnibblgekonbgjhkjicekgacgoagmm",
+      "desktopSharingChromeExtId": "blnhgbeilkjpcadckjogfflfijeblbpo",
       "hosts": {
         "domain": "" + __domain + "",
         "focus": "focus." + __domain + "",
@@ -63,6 +63,7 @@ if (window.localStorage["store.settings.server"])
       ],
       "disableSimulcast": false,
       "startAudioOnly": false,
+      "startWithAudioMuted": false,
       "stereo": false,
       "focusUserJid": "focus@" + __domain + ""
     };

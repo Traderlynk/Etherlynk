@@ -108,6 +108,7 @@ var etherlynkXmpp = (function(xmpp)
                     reason = $(this).attr('reason');
                     password = $(this).attr('password');
                     autoAccept = $(this).attr('autoaccept');
+                    mode = $(this).attr('mode');
 
                     if (!reason)
                     {
@@ -125,7 +126,7 @@ var etherlynkXmpp = (function(xmpp)
                         });
                     }
 
-                    $(document).trigger('ofmeet.conversation.invitation', [{id: id, from: from, autoAccept: autoAccept, reason: reason, offerer: offerer, password: password}]);
+                    $(document).trigger('ofmeet.conversation.invitation', [{id: id, from: from, autoAccept: autoAccept, reason: reason, offerer: offerer, password: password, mode: mode}]);
 
                 } else if (namespace == "http://jabber.org/protocol/muc#user")  {
 
@@ -164,7 +165,7 @@ var etherlynkXmpp = (function(xmpp)
             $(resp).find('conference').each(function()
             {
                 var jid = $(this).attr("jid");
-                var etherlynk = Strophe.getNodeFromJid(jid);
+                var ether = Strophe.getNodeFromJid(jid);
                 var muc = Strophe.getDomainFromJid(jid);
                 var domain = muc.substring("conference.".length);           // ignore "conference."
                 var server = domain + ":7443";
@@ -177,7 +178,7 @@ var etherlynkXmpp = (function(xmpp)
                     name: $(this).attr("name"),
                     pinned: $(this).attr("autojoin"),
                     open: $(this).attr("autojoin"),
-                    etherlynk: etherlynk,
+                    etherlynk: ether,
                     server: server,
                     domain: domain
                 });
@@ -229,11 +230,11 @@ var etherlynkXmpp = (function(xmpp)
         });
     }
 
-    xmpp.inviteToConference = function (lynk)
+    xmpp.inviteToConference = function (lynk, mode)
     {
         try {
             var jid = lynk.etherlynk + "@conference." + lynk.domain;
-            etherlynk.connection.send($msg({to: lynk.jid}).c("x", {xmlns: "jabber:x:conference", jid: jid}).up());
+            etherlynk.connection.send($msg({to: lynk.jid}).c("x", {xmlns: "jabber:x:conference", jid: jid, mode: mode}).up());
         } catch (e) {
             console.error(e);
         }

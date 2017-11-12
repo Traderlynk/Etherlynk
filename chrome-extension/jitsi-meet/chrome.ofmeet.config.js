@@ -4,13 +4,14 @@ if (window.localStorage["store.settings.server"])
 {
     var __server = JSON.parse(window.localStorage["store.settings.server"]);
     var __domain = JSON.parse(window.localStorage["store.settings.domain"]);
+    var __displayname = JSON.parse(window.localStorage["store.settings.displayname"]);
     var __username = JSON.parse(window.localStorage["store.settings.username"]);
     var __password = JSON.parse(window.localStorage["store.settings.password"]);
     var __enableSip = window.localStorage["store.settings.enableSip"] && JSON.parse(window.localStorage["store.settings.enableSip"]);
 
 	var OFMEET_CONFIG = {
 		emailAddress:'',
-		nickName:__username,
+		nickName:__displayname ? __displayname : __username,
 		userAvatar: null,
 		authorization: btoa(__username + ":" + __password),
 

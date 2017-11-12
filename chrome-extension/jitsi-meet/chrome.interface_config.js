@@ -29,7 +29,7 @@ var interfaceConfig = {
     "dialout",
     "addtocall",
     "contacts",
-    "info",
+    /*"info",*/
     "chat",
     "recording",
     "sharedvideo",
