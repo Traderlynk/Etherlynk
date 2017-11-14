@@ -70,12 +70,25 @@ window.addEventListener("load", function()
 				// send event to UI component
 				etherlynkobj.setbutton(message.data)
 			}
+
+			if (message.action == "load")
+			{
+				container.contentWindow.location.href = message.url;
+				etherlynkobj.style = "display: none;";
+				container.style= "display: block; width: 800px; height: 600px; border: 0;";
+			}
 		});
 
 		channel.onDisconnect.addListener(function()
 		{
 			console.log("channel disconnect");
 		});
+
+		document.body.addEventListener('etherlynk.ui.settings', function (e)
+		{
+			location.href = "options/index.html";
+
+		}, false);
 
 		document.body.addEventListener('etherlynk.ui.event', function (e)
 		{
@@ -100,21 +113,9 @@ window.addEventListener("load", function()
 		{
 			console.info('etherlynk.event.buttondown', e.detail.button)
 
-			if (e.detail.button == 82) // chat button
+			if (e.detail.button == 89) // settings button
 			{
-				toggleButton(82, "Open<br/>Chat");
-			}
-			else
-
-			if (e.detail.button == 83) // video button toggle
-			{
-				toggleButton(83, "Open<br/>Video");
-			}
-			else
-
-			if (e.detail.button == 84) // screen share button toggle
-			{
-				toggleButton(84, "Screen<br/>Share");
+				location.href = "options/index.html";
 			}
 			else
 
@@ -155,8 +156,16 @@ function handleCallButton(e)
 	{
 		call.lynk.etherlynk = "etherlynk-" + Math.random().toString(36).substr(2, 9);
 
+		if (getKeyColor(82) == "green")	 // audio, handle in background
+		{
+			channel.postMessage({event: "etherlynk.event.buttondown", button: e.detail.button});
+		}
+		else
+
 		if (getKeyColor(84) == "green")
 		{
+			bgWindow.closeVideoWindow();
+
 			handleVideoCall(call, "video");
 			location.href = "jitsi-meet/chrome.index.html?room=" + call.lynk.etherlynk + "#config.startScreenSharing=true";
 		}
@@ -164,16 +173,12 @@ function handleCallButton(e)
 
 		if (getKeyColor(83) == "green")
 		{
+			bgWindow.closeVideoWindow();
+
 			handleVideoCall(call, "video");
 			location.href = "jitsi-meet/chrome.index.html?room=" + call.lynk.etherlynk;
 		}
-		else
 
-		if (getKeyColor(82) == "green")
-		{
-			//handleChatCall(call);
-			//location.href = "groupchat/index.html";
-		}
 		else {
 
 			if (call.button[1] == "redflash" && call.lynk.mode == "video") // ringing video call
@@ -182,9 +187,11 @@ function handleCallButton(e)
 				location.href = "jitsi-meet/chrome.index.html?room=" + call.lynk.etherlynk + "#config.startScreenSharing=true";
 
 			} else {
-				// default - voice
-				channel.postMessage({event: "etherlynk.event.buttondown", button: e.detail.button});
+				// default - chat
+				bgWindow.closeChatWindow();
+				location.href = "groupchat/index.html?jid=" + call.lynk.jid + "&name=" + call.lynk.name;
 			}
+
 		}
 	} else {
 		channel.postMessage({event: "etherlynk.event.buttondown", button: e.detail.button});
@@ -194,33 +201,39 @@ function handleCallButton(e)
 function handleConferenceButton(e)
 {
 	var i = e.detail.button - 64;
-	console.info('conference button', bgWindow.lynkUI.conferences[i]);
+	var conference = bgWindow.lynkUI.conferences[i];
 
-	if (bgWindow.lynkUI.conferences[i])
+	console.info('conference button', conference);
+
+	if (conference)
 	{
+		if (getKeyColor(82) == "green")
+		{
+			// audio first
+			channel.postMessage({event: "etherlynk.event.buttondown", button: e.detail.button});
+		}
+		else
+
 		if (getKeyColor(84) == "green")
 		{
-			// screen share first
-			location.href = "jitsi-meet/chrome.index.html?room=" + bgWindow.lynkUI.conferences[i].lynk.name.toLowerCase() + "#config.startScreenSharing=true";
+			// screen share second
+			bgWindow.closeVideoWindow();
+			location.href = "jitsi-meet/chrome.index.html?room=" + conference.lynk.name.toLowerCase() + "#config.startScreenSharing=true";
 		}
 		else
 
 		if (getKeyColor(83) == "green")
 		{
-			// video second
-			location.href = "jitsi-meet/chrome.index.html?room=" + bgWindow.lynkUI.conferences[i].lynk.name.toLowerCase();
-		}
-		else
-
-		if (getKeyColor(82) == "green")
-		{
-			// chat last
-			location.href = "groupchat/index.html";
+			// video third
+			bgWindow.closeVideoWindow();
+			location.href = "jitsi-meet/chrome.index.html?room=" + conference.lynk.name.toLowerCase();
 		}
 		else {
-			// default - voice
-			channel.postMessage({event: "etherlynk.event.buttondown", button: e.detail.button});
+			// chat last
+			bgWindow.closeChatWindow();
+			location.href = "groupchat/index.html?room=" + conference.lynk.etherlynk;
 		}
+
 	} else {
 		channel.postMessage({event: "etherlynk.event.buttondown", button: e.detail.button});
 	}
@@ -249,16 +262,6 @@ function handleVideoCall(call, mode)
 		{
 			console.log("call answered", wasCleared);
 		});
-	}
-}
-
-function toggleButton(button, label)
-{
-	if (getKeyColor(button) == "green")
-	{
-		bgWindow.changeButton(button, null, label)
-	} else {
-		bgWindow.changeButton(button, "green", label)
 	}
 }
 

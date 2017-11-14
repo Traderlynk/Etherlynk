@@ -3,7 +3,7 @@ this.manifest = {
     "icon": "../tl_icon.png",
     "settings": [
         {
-            "tab": i18n.get("configuration"),
+            "tab": i18n.get("general"),
             "group": i18n.get("connection"),
             "name": "server",
             "type": "text",
@@ -11,7 +11,7 @@ this.manifest = {
             "text": "server name:port"
         },
         {
-            "tab": i18n.get("configuration"),
+            "tab": i18n.get("general"),
             "group": i18n.get("connection"),
             "name": "domain",
             "type": "text",
@@ -19,7 +19,7 @@ this.manifest = {
             "text": "domain name"
         },
         {
-            "tab": i18n.get("configuration"),
+            "tab": i18n.get("general"),
             "group": i18n.get("login"),
             "name": "displayname",
             "type": "text",
@@ -27,7 +27,7 @@ this.manifest = {
             "text": i18n.get("x-characters")
         },
         {
-            "tab": i18n.get("configuration"),
+            "tab": i18n.get("general"),
             "group": i18n.get("login"),
             "name": "username",
             "type": "text",
@@ -35,7 +35,7 @@ this.manifest = {
             "text": i18n.get("x-characters")
         },
         {
-            "tab": i18n.get("configuration"),
+            "tab": i18n.get("general"),
             "group": i18n.get("login"),
             "name": "password",
             "type": "text",
@@ -44,7 +44,7 @@ this.manifest = {
             "masked": true
         },
         {
-            "tab": i18n.get("configuration"),
+            "tab": i18n.get("general"),
             "group": i18n.get("login"),
             "name": "connect",
             "type": "button",
@@ -52,28 +52,28 @@ this.manifest = {
             "text": i18n.get("login")
         },
         {
-            "tab": i18n.get("configuration"),
+            "tab": i18n.get("general"),
             "group": i18n.get("login"),
             "name": "status",
             "text": i18n.get(""),
             "type": "description"
         },
         {
-            "tab": i18n.get("configuration"),
+            "tab": i18n.get("general"),
             "group": i18n.get("Preferences"),
             "name": "enableMidi",
             "type": "checkbox",
             "label": i18n.get("Enable Midi")
         },
         {
-            "tab": i18n.get("configuration"),
+            "tab": i18n.get("general"),
             "group": i18n.get("Preferences"),
             "name": "enableSip",
             "type": "checkbox",
             "label": i18n.get("Enable SIP")
         },
         {
-            "tab": i18n.get("configuration"),
+            "tab": i18n.get("general"),
             "group": i18n.get("Preferences"),
             "name": "enableRingtone",
             "type": "checkbox",

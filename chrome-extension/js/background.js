@@ -115,6 +115,30 @@ function notifyList(message, context, items, buttons, callback)
     });
 };
 
+function closeVideoWindow()
+{
+    if (lynkUI.videoWindow != null)
+    {
+        chrome.windows.remove(lynkUI.videoWindow.id);
+        lynkUI.videoWindow = null;
+    }
+}
+
+function openVideoWindow(room)
+{
+    if (lynkUI.videoWindow != null)
+    {
+        chrome.windows.remove(lynkUI.videoWindow.id);
+    }
+    var url = chrome.extension.getURL("jitsi-meet/chrome.index.html?room=" + room);
+
+	chrome.windows.create({url: url, focused: true, type: "popup"}, function (win)
+	{
+		lynkUI.videoWindow = win;
+		chrome.windows.update(lynkUI.videoWindow.id, {drawAttention: true, width: 800, height: 600});
+	});
+}
+
 function closeChatWindow()
 {
     if (lynkUI.chatWindow != null)
@@ -124,20 +148,18 @@ function closeChatWindow()
     }
 }
 
-function openChatWindow(focus)
+function openChatWindow(url)
 {
-    var url = chrome.extension.getURL("groupchat/index.html");
-
     if (lynkUI.chatWindow == null)
     {
-        chrome.windows.create({url: url, focused: focus, type: "popup"}, function (win)
+        chrome.windows.create({url: chrome.extension.getURL(url), focused: true, type: "popup"}, function (win)
         {
             lynkUI.chatWindow = win;
-            chrome.windows.update(lynkUI.chatWindow.id, {drawAttention: focus, width: 800, height: 600});
+            chrome.windows.update(lynkUI.chatWindow.id, {drawAttention: true, width: 800, height: 600});
         });
 
     } else {
-        chrome.windows.update(lynkUI.chatWindow.id, {drawAttention: true, width: 800, height: 600});
+        chrome.windows.update(lynkUI.chatWindow.id, {drawAttention: true, focused: true, width: 800, height: 600});
     }
 }
 
@@ -248,7 +270,7 @@ window.addEventListener("load", function()
 
     chrome.contextMenus.create({title: "Etherlynk Chat", contexts: ["browser_action"],  onclick: function()
     {
-        openChatWindow();
+        openChatWindow("groupchat/index.html");
     }});
 
     chrome.runtime.onConnect.addListener(function(port)
@@ -358,14 +380,11 @@ window.addEventListener("load", function()
         if (lynkUI.chatWindow && win == lynkUI.chatWindow.id)
         {
             lynkUI.chatWindow = null;
-
-            changeButton(82, null, "Open<br/>Chat")
         }
 
         if (lynkUI.videoWindow && win == lynkUI.videoWindow.id)
         {
             lynkUI.videoWindow = null;
-            changeButton(83, null, "Open<br/>Video")
         }
     });
 

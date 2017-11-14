@@ -272,6 +272,11 @@ function getEtherlynks()
         etherlynk.leave(conf.name);
     });
 
+	setTimeout(function()
+	{
+		// signal we are ready
+		changeButton(89, "green", "");
+	}, 3000);
 }
 
 function handleEtherlynk(lynk)
@@ -286,9 +291,6 @@ function handleEtherlynk(lynk)
 
         if (!lynk.server) lynk.server = lynkUI.server;
         if (!lynk.domain) lynk.domain = lynkUI.domain;
-
-        etherlynk.join(lynk.etherlynk, lynk.server, lynk.domain, {mute: true, sip: lynk.open == "true"});
-
     }
     else {
         lynkUI.calls[lynk.pinId] = {button: [parseInt(lynk.pinId), lynk.presence, lynk.name], lynk: lynk};
@@ -307,7 +309,7 @@ function resetMidiLights()
         Tletherlynk.Midi.sendlight("144", i, 0)
     }
 
-    var labels = ["Open<br/>Chat", "Open Video", "Screen Share", "", "Auto Answer", "Private", "Invite/Add", "Speaker"]
+    var labels = ["Audio", "Video", "Screen", "", "Auto Answer", "Private", "Invite/Add", ""]
 
     for (var i=82; i<90; i++)
     {
@@ -454,84 +456,121 @@ function handleButtonPress(button)
 
     if (data.type == "call")
     {
-        if (data.button[1] == data.lynk.presence)       // idle
-        {
-            clearActiveCall();
+		if (lynkUI.actions[0].button[1] == "green") // audio button
+		{
+			if (data.button[1] == data.lynk.presence)       // idle
+			{
+				clearActiveCall();
 
-            data.lynk.etherlynk = "etherlynk-" + Math.random().toString(36).substr(2, 9);
+				data.lynk.etherlynk = "etherlynk-" + Math.random().toString(36).substr(2, 9);
 
-            startTone("ringback-uk");
-            etherlynk.join(data.lynk.etherlynk);
-            changeButton(button, "greenflash", data.button[2]);
+				startTone("ringback-uk");
+				etherlynk.join(data.lynk.etherlynk);
+				changeButton(button, "greenflash", data.button[2]);
 
-            if (data.lynk.jid)
-            {
-                setActiveLynk(data.lynk);
-                etherlynkXmpp.inviteToConference(data.lynk);
-            }
+				if (data.lynk.jid)
+				{
+					setActiveLynk(data.lynk);
+					etherlynkXmpp.inviteToConference(data.lynk);
+				}
 
-        }
-        else
+			}
+			else
 
-        if (data.button[1] == "redflash")           // ringing
-        {
-            clearActiveCall();
+			if (data.button[1] == "redflash")           // ringing
+			{
+				clearActiveCall();
 
-            etherlynk.join(data.lynk.etherlynk, data.lynk.server, data.lynk.domain);
-            setActiveLynk(data.lynk);
+				etherlynk.join(data.lynk.etherlynk, data.lynk.server, data.lynk.domain);
+				setActiveLynk(data.lynk);
 
-            chrome.notifications.clear(data.lynk.etherlynk, function(wasCleared)
-            {
-                console.log("call answered", wasCleared);
-            });
-        }
-        else
+				chrome.notifications.clear(data.lynk.etherlynk, function(wasCleared)
+				{
+					console.log("call answered", wasCleared);
+				});
+			}
+			else
 
-        if (data.button[1] == "green")             // connected
-        {
-            etherlynk.mute(data.lynk.etherlynk);
-            changeButton(button, "red", data.button[2])
-        }
-        else
+			if (data.button[1] == "green")             // connected
+			{
+				etherlynk.mute(data.lynk.etherlynk);
+				changeButton(button, "red", data.button[2])
+			}
+			else
 
-        if (data.button[1] == "red")               // held/muted
-        {
-            etherlynk.mute(data.lynk.etherlynk);
-            changeButton(button, "green", data.button[2])
-        }
-        else
+			if (data.button[1] == "red")               // held/muted
+			{
+				etherlynk.mute(data.lynk.etherlynk);
+				changeButton(button, "green", data.button[2])
+			}
+			else
 
-        if (data.button[1] == "greenflash")       // originate/delivered
-        {
-            changeButton(button, data.lynk.presence, data.button[2])
-            etherlynk.leave(data.lynk.etherlynk);
-        }
-        else
+			if (data.button[1] == "greenflash")       // originate/delivered
+			{
+				changeButton(button, data.lynk.presence, data.button[2])
+				etherlynk.leave(data.lynk.etherlynk);
+			}
+			else
 
-        if (data.button[1] == "yellow")       // busy elsewhere
-        {
-            lynkUI.currentLynk = data.lynk;
-            lynkUI.currentLynk.barge = true;
-            etherlynk.join(data.lynk.etherlynk);
-        }
+			if (data.button[1] == "yellow")       // busy elsewhere
+			{
+				lynkUI.currentLynk = data.lynk;
+				lynkUI.currentLynk.barge = true;
+				etherlynk.join(data.lynk.etherlynk);
+			}
+		}
+		else
 
+		if (lynkUI.actions[2].button[1] == "green") // screen share button toggle
+		{
+			openVideo(data.lynk.etherlynk + "#config.startScreenSharing=true");
+		}
+		else
+
+		if (lynkUI.actions[1].button[1] == "green") // video button toggle
+		{
+			openVideo(data.lynk.etherlynk);
+		}
+		else { // chat is default
+
+			openPrivateChat(data.lynk);
+		}
     }
     else
 
     if (data.type == "conference")
     {
-        if (data.button[1] == "red")
-        {
-            etherlynk.mute(data.lynk.etherlynk);
-            changeButton(button, "redflash", data.button[2])
-        }
-        else
+		if (lynkUI.actions[0].button[1] == "green") // audio button
+		{
+			if (data.button[1] == "red")
+			{
+				etherlynk.muteLocal(data.lynk.etherlynk, false);
+				changeButton(button, "redflash", data.button[2])
+			}
+			else
 
-        if (data.button[1] == "redflash")
-        {
-            etherlynk.mute(data.lynk.etherlynk);
-            changeButton(button, "red", data.button[2])
-        }
+			if (data.button[1] == "redflash")
+			{
+				etherlynk.muteLocal(data.lynk.etherlynk, true);
+				changeButton(button, "red", data.button[2]);
+			}
+		}
+		else
+
+		if (lynkUI.actions[2].button[1] == "green") // screen share button toggle
+		{
+			openVideo(data.lynk.etherlynk + "#config.startScreenSharing=true");
+		}
+		else
+
+		if (lynkUI.actions[1].button[1] == "green") // video button toggle
+		{
+			openVideo(data.lynk.etherlynk);
+		}
+		else { // chat is default
+
+			openChat(data.lynk.etherlynk);
+		}
     }
     else
 
@@ -546,19 +585,81 @@ function handleButtonPress(button)
     }
     else
 
-    if (button == 82) // chat button
-    {
-		changeButton(82, data.button[1] == "green" ? null : "green", "Open<br/>Chat")
-    }
-
     if (button == 83) // video button
     {
-		changeButton(83, data.button[1] == "green" ? null : "green", "Open<br/>Video")
+		changeButton(83, data.button[1] == "green" ? null : "green", "Video")
 	}
+	else
 
     if (button == 84) // screen share button
     {
-		changeButton(84, data.button[1] == "green" ? null : "green", "Screen<br/>Share")
+		changeButton(84, data.button[1] == "green" ? null : "green", "Screen")
+	}
+	else
+
+    if (button == 82) // audio button
+    {
+        for(var z = 0; z<lynkUI.conferences.length; z++)
+        {
+            if (lynkUI.conferences[z])
+            {
+                var lynk = lynkUI.conferences[z].lynk;
+
+                if (data.button[1] == null)
+                {
+        			etherlynk.join(lynk.etherlynk, lynk.server, lynk.domain, {mute: true, sip: lynk.open == "true"});
+				}
+				else {
+        			etherlynk.leave(lynk.etherlynk);
+				}
+            }
+        }
+
+        changeButton(82, data.button[1] == "green" ? null : "green", "Audio")
+	}
+}
+
+function openChat(room)
+{
+    console.log("openChat", parameter);
+
+	var url = "groupchat/index.html"
+	if (room) url = url + "?room=" + room;
+
+	if (lynkUI.popup && lynkUI.port)
+	{
+		lynkUI.port.postMessage({action: "load", url: url});
+
+	} else {
+		openChatWindow(url);
+	}
+}
+
+function openPrivateChat(lynk)
+{
+    console.log("openChat", lynk);
+
+	var url = "groupchat/index.html?jid=" + lynk.jid + "&name=" + lynk.name;
+
+	if (lynkUI.popup && lynkUI.port)
+	{
+		lynkUI.port.postMessage({action: "load", url: url});
+
+	} else {
+		openChatWindow(url);
+	}
+}
+
+function openVideo(parameter)
+{
+    console.log("openVideo", parameter);
+
+	if (lynkUI.popup && lynkUI.port)
+	{
+		lynkUI.port.postMessage({action: "load", url: "jitsi-meet/chrome.index.html?room=" + parameter});
+
+	} else {
+		openVideoWindow(parameter);
 	}
 }
 

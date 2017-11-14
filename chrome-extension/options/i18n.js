@@ -24,9 +24,9 @@ this.i18n = {
         "en": "Intercom",
         "de": "Intercom"
     },
-    "configuration": {
-        "en": "Configuration",
-        "de": "Configuration"
+    "general": {
+        "en": "General",
+        "de": "General"
     },
     "login": {
         "en": "Login",
