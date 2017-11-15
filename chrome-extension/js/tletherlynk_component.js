@@ -197,6 +197,15 @@ customElements.define('tl-etherlynk', class extends HTMLElement {
           border:solid 1px #c00606;
           border-radius:50%;
           background-color:red;
+          animation: bounce 0.8s 0s;
+        }
+
+        @keyframes bounce {
+          0% { transform: scale(1.2) }
+          50% { transform: scale(1.6) }
+          60% { transform: scale(0.6) }
+          80% { transform: scale(0.95) }
+          100% { transform: scale(1) }
         }
 
         .hidden{
