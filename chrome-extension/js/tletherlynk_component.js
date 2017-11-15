@@ -85,6 +85,12 @@ customElements.define('tl-etherlynk', class extends HTMLElement {
           overflow: visible;
         }
 
+        .but label{
+          width: 64px;
+          display: block;
+          overflow: hidden;
+        }
+        
         .round label{
           display:block;
           position:absolute;
