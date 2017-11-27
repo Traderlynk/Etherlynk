@@ -68,7 +68,6 @@ customElements.define('tl-etherlynk', class extends HTMLElement {
           float:left;
           color: #848080;
           border-radius:5px;
-          overflow: hidden;
           margin:4px;
           position:relative;
           font-family: 'helvetica';
@@ -86,6 +85,12 @@ customElements.define('tl-etherlynk', class extends HTMLElement {
           overflow: visible;
         }
 
+        .but label{
+          width: 64px;
+          display: block;
+          overflow: hidden;
+        }
+        
         .round label{
           display:block;
           position:absolute;
@@ -182,6 +187,35 @@ customElements.define('tl-etherlynk', class extends HTMLElement {
             height: 100px;
             padding: 0px;
             margin:0 6px 0 0;
+        }
+
+        .notifyindicator{
+          position:absolute;
+          width:13px;
+          height:13px;
+          color:#ffffff;
+          font-size:10px;
+          overflow:hidden;
+          padding:2px;
+          line-height:11px;
+          top:-7px;
+          right:-7px;
+          border:solid 1px #c00606;
+          border-radius:50%;
+          background-color:red;
+          animation: bounce 0.8s 0s;
+        }
+
+        @keyframes bounce {
+          0% { transform: scale(1.2) }
+          50% { transform: scale(1.6) }
+          60% { transform: scale(0.6) }
+          80% { transform: scale(0.95) }
+          100% { transform: scale(1) }
+        }
+
+        .hidden{
+          display:none;
         }
 
 
@@ -318,6 +352,8 @@ customElements.define('tl-etherlynk', class extends HTMLElement {
       for (var i = 1; i < 82; i++) {
               var contactbut = document.createElement('button');
               var label = document.createElement('label');
+              var notify = document.createElement('div');
+
 
               if(i==81){
                  contactbut.className = "but round square"
@@ -351,11 +387,20 @@ customElements.define('tl-etherlynk', class extends HTMLElement {
                 // label.innerHTML = this.buttonmap[i][0]
               }
 
+              if(this.buttonmap[i][3]!=undefined){
+                notify.className="notifyindicator"
+                notify.innerHTML = this.buttonmap[i][3]
+              }else{
+                notify.className="notifyindicator hidden"
+                notify.innerHTML=" "
+              }
+
               label.setAttribute('uid', this.buttonmap[i][0]);
 
               contactbut.setAttribute('uid', this.buttonmap[i][0]);
               this.buttonSlot.appendChild(contactbut)
               contactbut.appendChild(label)
+              contactbut.appendChild(notify)
 
 
               //set midilights here
