@@ -2,7 +2,7 @@ window.addEventListener("load", function()
 {
 	console.log("Etherlynk is trying to get permissions to use your video/audio devices");
 
-	navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(function(stream)
+	navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then(function(stream)
 	{
 		console.log("Etherlynk now has permissions to use your video/audio devices");
 
