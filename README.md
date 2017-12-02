@@ -1,4 +1,5 @@
-# Etherlynk
+<img width="128" src="http://traderlynk.4ng.net/etherlynk.png" />
+
 Decentralized communications for Ethereum
 
 In a sentence, Etherlynk is a unified communication protocol that enables the users of enterprise [DApps](https://ethereum.stackexchange.com/questions/383/what-is-a-dapp) (decentralized applications) to communicate and collaborate with each other within the context of the business transactions that binds them.
