@@ -1,9 +1,12 @@
-# Etherlynk
+<img width="128" src="http://traderlynk.4ng.net/etherlynk.png" />
+
 Decentralized communications for Ethereum
 
 In a sentence, Etherlynk is a unified communication protocol that enables the users of enterprise [DApps](https://ethereum.stackexchange.com/questions/383/what-is-a-dapp) (decentralized applications) to communicate and collaborate with each other within the context of the business transactions that binds them.
 
-Etherlynk is <b>not</b> a communication protocol between DApps like [Whisper](https://github.com/ethereum/wiki/wiki/Whisper), <b>nor</b> is it a communication protocol for integrating telecommunication devices to the Ethereum network. That is covered by the [ComChain Alliance](http://www.comchainalliance.org/). Etherlynk is about initiating enterprise communications directly from the context of business transactions happening inside a DApp. The purpose is to create from <b>source</b>, a consistent timeline of business transactions and supporting communication events side by side in the Ethereum block chain.
+Etherlynk is <b>not</b> a communication protocol between DApps like [Whisper](https://github.com/ethereum/wiki/wiki/Whisper), <b>nor</b> is it a communication protocol for integrating telecommunication devices to the Ethereum network. To do that you would need an Ethereum based telephony API like [EtherVox](http://ethervox.gltd.net/home) and access to the infastructure provided by the [ComChain Alliance](http://www.comchainalliance.org/). 
+
+Etherlynk is about initiating regulated and compliant enterprise communications directly from the context of business transactions happening inside a DApp. The purpose is to create from <b>source</b>, a consistent timeline of business transactions and supporting communication events side by side in the Ethereum block chain.
 
 ## Use case
 - Members of the same working team (including external partners) need to stay connected to each other for the life span of a business project or the execution of a business task. To remain competitive, team members need to disseminate information to colleagues across global subsidiaries immediately and quickly. The conventional technology for this is known as intercom and hoot 'n' holler when the connection is persistent.
