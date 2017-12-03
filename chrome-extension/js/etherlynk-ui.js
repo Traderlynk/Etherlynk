@@ -7,6 +7,7 @@ function getEtherlynks()
     lynkUI.currentLynk = null;
     lynkUI.presence = {};
     lynkUI.participants = {};
+    lynkUI.sip = {};
 
     resetMidiLights()
 
@@ -17,7 +18,7 @@ function getEtherlynks()
 
     $(document).bind("ofmeet.user.presence", function(event, presence)
     {
-        console.log('ofmeet.user.presence', presence);
+        //console.log'ofmeet.user.presence', presence);
 
         var pres = null;
         if (presence.type != "unavailable") pres = "gray";
@@ -52,7 +53,7 @@ function getEtherlynks()
 
                 if (activity.to == lynk.jid)
                 {
-                    console.log('ofmeet.user.active', activity, lynk);
+                    //console.log'ofmeet.user.active', activity, lynk);
 
                     changeButton(parseInt(lynk.pinId), "yellow", lynk.name);
                     lynk.etherlynk = activity.name;
@@ -82,7 +83,7 @@ function getEtherlynks()
 
                 if (activity.to == lynk.jid)
                 {
-                    console.log('ofmeet.user.inactive', activity, lynk);
+                    //console.log'ofmeet.user.inactive', activity, lynk);
 
                     lynkUI.participants[activity.name]--;
                     changeButton(parseInt(lynk.pinId), lynk.presence, lynk.name);
@@ -95,7 +96,7 @@ function getEtherlynks()
 
     $(document).bind('ofmeet.conversation.invitation', function(event, invite)
     {
-        console.log('ofmeet.conversation.invitation', invite);
+        //console.log'ofmeet.conversation.invitation', invite);
 
         var jid = Strophe.getBareJidFromJid(invite.from);
         var room = Strophe.getNodeFromJid(invite.id);
@@ -130,7 +131,7 @@ function getEtherlynks()
 
 						notifyText(lynk.name, lynk.jid, null, [{title: "Accept Conversation?", iconUrl: chrome.extension.getURL("success-16x16.gif")}, {title: "Reject Conversation?", iconUrl: chrome.extension.getURL("forbidden-16x16.gif")}], function(notificationId, buttonIndex)
 						{
-							console.log("handleAction callback", notificationId, buttonIndex);
+							//console.log"handleAction callback", notificationId, buttonIndex);
 
 							if (buttonIndex == 0)   // accept
 							{
@@ -157,7 +158,7 @@ function getEtherlynks()
 
     $(document).bind('ofmeet.conference.joined', function(event, conf)
     {
-        console.log('ofmeet.media.joined', event, conf);
+        //console.log'ofmeet.media.joined', event, conf);
 
         for(var z = 0; z<lynkUI.conferences.length; z++)
         {
@@ -184,7 +185,7 @@ function getEtherlynks()
 
             notifyText(lynkUI.currentLynk.name, lynkUI.currentLynk.jid, null, [{title: "Clear Conversation?", iconUrl: chrome.extension.getURL("success-16x16.gif")}], function(notificationId, buttonIndex)
             {
-                console.log("active call callback", notificationId, buttonIndex);
+                //console.log"active call callback", notificationId, buttonIndex);
 
                 if (buttonIndex == 0)   // terminate
                 {
@@ -198,7 +199,7 @@ function getEtherlynks()
 
     $(document).bind('ofmeet.conference.left', function(event, conf)
     {
-        console.log('ofmeet.conference.left', event, conf);
+        //console.log'ofmeet.conference.left', event, conf);
 
         for(var z = 0; z<lynkUI.conferences.length; z++)
         {
@@ -244,7 +245,7 @@ function getEtherlynks()
 
     $(document).bind('ofmeet.user.gone', function(event, conf)
     {
-        console.log('ofmeet.user.gone', conf, lynkUI.participants[conf.name]);
+        //console.log'ofmeet.user.gone', conf, lynkUI.participants[conf.name]);
 
         if (conf.id == lynkUI.username) return;
 
@@ -252,7 +253,7 @@ function getEtherlynks()
 
         chrome.notifications.clear(conf.name, function(wasCleared)
         {
-            console.log("call cleared", wasCleared);
+            //console.log"call cleared", wasCleared);
         });
 
         for(var z = 0; z<lynkUI.calls.length; z++)
@@ -281,7 +282,7 @@ function getEtherlynks()
 
 function handleEtherlynk(lynk)
 {
-    console.log("handleEtherlynk", lynk);
+    //console.log"handleEtherlynk", lynk);
 
     if (!lynk.pinId) return;
 
@@ -422,7 +423,7 @@ function clearActiveButton()
     {
         chrome.notifications.clear(lynkUI.currentLynk.etherlynk, function(wasCleared)
         {
-            console.log("call cleared", wasCleared);
+            //console.log"call cleared", wasCleared);
         });
 
         var color = lynkUI.participants[lynkUI.currentLynk.etherlynk] && lynkUI.participants[lynkUI.currentLynk.etherlynk] > 0 ? "yellow" : lynkUI.currentLynk.presence;
@@ -452,7 +453,7 @@ function handleButtonPress(button)
 	// actions for button presses are handled here
 
     var data = handleButton(button);
-    console.log("button press", button, data, lynkUI.currentLynk);
+    //console.log"button press", button, data, lynkUI.currentLynk);
 
     if (data.type == "call")
     {
@@ -462,16 +463,20 @@ function handleButtonPress(button)
 			{
 				clearActiveCall();
 
-				data.lynk.etherlynk = "etherlynk-" + Math.random().toString(36).substr(2, 9);
+				data.lynk.etherlynk = lynkUI.username < data.lynk.id ? lynkUI.username + data.lynk.id : data.lynk.id + lynkUI.username;
 
 				startTone("ringback-uk");
-				etherlynk.join(data.lynk.etherlynk);
+				etherlynk.join(data.lynk.etherlynk, data.lynk.server, data.lynk.domain, {mute: false, sip: lynkUI.enableSip, xmpp: data.lynk.type == "xmpp", jid: data.lynk.jid});
 				changeButton(button, "greenflash", data.button[2]);
 
 				if (data.lynk.jid)
 				{
 					setActiveLynk(data.lynk);
-					etherlynkXmpp.inviteToConference(data.lynk);
+
+					if (data.lynk.type == "xmpp")
+					{
+						etherlynkXmpp.inviteToConference(data.lynk);
+					}
 				}
 
 			}
@@ -486,7 +491,7 @@ function handleButtonPress(button)
 
 				chrome.notifications.clear(data.lynk.etherlynk, function(wasCleared)
 				{
-					console.log("call answered", wasCleared);
+					//console.log"call answered", wasCleared);
 				});
 			}
 			else
@@ -621,7 +626,7 @@ function handleButtonPress(button)
 
 function openChat(room)
 {
-    console.log("openChat", parameter);
+    //console.log"openChat", parameter);
 
 	var url = "groupchat/index.html"
 	if (room) url = url + "?room=" + room;
@@ -637,7 +642,7 @@ function openChat(room)
 
 function openPrivateChat(lynk)
 {
-    console.log("openChat", lynk);
+    //console.log"openChat", lynk);
 
 	var url = "groupchat/index.html?jid=" + lynk.jid + "&name=" + lynk.name;
 
@@ -652,7 +657,7 @@ function openPrivateChat(lynk)
 
 function openVideo(parameter)
 {
-    console.log("openVideo", parameter);
+    //console.log"openVideo", parameter);
 
 	if (lynkUI.popup && lynkUI.port)
 	{
@@ -666,7 +671,7 @@ function openVideo(parameter)
 function handleButtonHeld(button)
 {
     var data = handleButton(button);
-    console.log("handleButtonHeld", data);
+    //console.log"handleButtonHeld", data);
 
     if (data.type == "call")
     {
@@ -680,7 +685,7 @@ function handleButtonHeld(button)
 
 function handleSlider(slider, value)
 {
-    //console.log("handleSlider", slider, value);
+    //console.log("handleSlider", slider, value, lynkUI.currentLynk);
 
     if (slider == 56)       // handset slider
     {
@@ -688,6 +693,9 @@ function handleSlider(slider, value)
         {
             var audio = document.getElementById("remoteAudio-" + lynkUI.currentLynk.etherlynk);
             if (audio) audio.volume = value /128;
+
+            var audioSip = document.getElementById("remoteAudio-sip-" + lynkUI.currentLynk.etherlynk);
+            if (audioSip) audioSip.volume = value /128;
         }
     }
     else                // speakers

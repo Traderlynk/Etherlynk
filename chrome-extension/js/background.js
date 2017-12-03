@@ -223,7 +223,7 @@ window.addEventListener("load", function()
     {
         init: function (connection)
         {
-            console.log("strophe plugin: etherlynk enabled", connection.jid);
+            //console.log("strophe plugin: etherlynk enabled", connection.jid);
             this.connection = connection;
 
             this.connection.addHandler(function(message)
@@ -245,7 +245,7 @@ window.addEventListener("load", function()
         },
         statusChanged: function(status, condition)
         {
-            console.log("strophe plugin: statusChanged", this.connection.jid);
+            //console.log("strophe plugin: statusChanged", this.connection.jid);
 
             if (Strophe.getNodeFromJid(this.connection.jid) != lynkUI.username) return;
 
@@ -275,7 +275,7 @@ window.addEventListener("load", function()
 
     chrome.runtime.onConnect.addListener(function(port)
     {
-        console.log("popup connect");
+        //console.log("popup connect");
         lynkUI.popup = true;
         lynkUI.port = port;
 
@@ -299,7 +299,7 @@ window.addEventListener("load", function()
 
         port.onDisconnect.addListener(function()
         {
-            console.log("popup disconnect");
+            //console.log("popup disconnect");
             lynkUI.popup = false;
             lynkUI.port = null;
         });
@@ -307,7 +307,7 @@ window.addEventListener("load", function()
 
     chrome.runtime.onMessageExternal.addListener(function(request, sender, sendResponse)
     {
-        console.log("Got deskshare request", request, sender);
+        //console.log("Got deskshare request", request, sender);
 
         if(request.getVersion)
         {
@@ -375,7 +375,7 @@ window.addEventListener("load", function()
 
     chrome.windows.onRemoved.addListener(function(win)
     {
-        console.log("closing window ", win);
+        //console.log("closing window ", win);
 
         if (lynkUI.chatWindow && win == lynkUI.chatWindow.id)
         {

@@ -90,7 +90,7 @@ customElements.define('tl-etherlynk', class extends HTMLElement {
           display: block;
           overflow: hidden;
         }
-        
+
         .round label{
           display:block;
           position:absolute;
@@ -274,7 +274,7 @@ customElements.define('tl-etherlynk', class extends HTMLElement {
 
         this.sliders[i].addEventListener("wheel", function(e){
 
-          console.log("wheel",e.deltaY)
+          //console.log("wheel",e.deltaY)
 
 
           if(e.deltaY>0){
@@ -295,7 +295,7 @@ customElements.define('tl-etherlynk', class extends HTMLElement {
 
          document.body.addEventListener('click', function (e)
          {
-			console.log("clicked canvas", e);
+			//console.log("clicked canvas", e);
 
 			if (e.clientX > 750 && e.clientX < 790 && e.clientY > 560 && e.clientY < 600)
 			{
@@ -315,17 +315,17 @@ customElements.define('tl-etherlynk', class extends HTMLElement {
                     case 144:
                         //Note On
                         if (e.detail.data2!=0) {  // if velocity != 0, this is a note-on message
-                          // console.log("midi call back button= ",midiassignmentmap.pads[e.detail.data2])
+                          // //console.log("midi call back button= ",midiassignmentmap.pads[e.detail.data2])
                            return;
                         }
                     case 128:
                           //Note off
-                          //console.log("note off = ",e.detail.data2)
+                          ////console.log("note off = ",e.detail.data2)
                           return;
 
                     case 176:
                           //cc value
-                          // console.log("midi knob= ",e.detail.data2)
+                          // //console.log("midi knob= ",e.detail.data2)
 
                           _this.sliders[_this.slidermap[e.detail.data2]].value=e.detail.data3;
 
@@ -444,7 +444,7 @@ customElements.define('tl-etherlynk', class extends HTMLElement {
               }else{
                 if(this.midienabled==true){
                   if(i==1){
-                    console.log("1")
+                    //console.log("1")
                     Tletherlynk.Midi.sendlight("144","56","00")
 
                   }
@@ -500,7 +500,7 @@ customElements.define('tl-etherlynk', class extends HTMLElement {
 
 
       this.timeout[parseInt(data2)] = setTimeout(function(){
-          // console.log("Button held",parseInt(data2))
+          // //console.log("Button held",parseInt(data2))
           var etherlynkeventheld = new CustomEvent('etherlynk.event.held', { 'detail': {'button':parseInt(data2)} });
           document.body.dispatchEvent(etherlynkeventheld);
 

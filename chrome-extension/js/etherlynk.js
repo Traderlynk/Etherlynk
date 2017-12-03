@@ -22,11 +22,11 @@ var etherlynk = (function(lynk)
 
     function cleanupConnection(name)
     {
-        console.log("cleanupConnection", name);
+        //console.log("cleanupConnection", name);
 
         if (lynk.localAudioTracks[name])
         {
-            console.info("cleanupConnection: remove localtrack");
+            //console.info("cleanupConnection: remove localtrack");
 
             lynk.localAudioTracks[name].track.stop();
             lynk.localAudioTracks[name].dispose();
@@ -58,7 +58,7 @@ var etherlynk = (function(lynk)
 
         if (lynk.conferences[name])
         {
-            console.info("cleanupConnection: leave", name);
+            //console.info("cleanupConnection: leave", name);
 
             lynk.conferences[name].removeTrack(lynk.localAudioTracks[name])
             lynk.conferences[name].leave();
@@ -93,6 +93,8 @@ var etherlynk = (function(lynk)
 
     function connectXMPP(name, params)
     {
+		//console.log("connectXMPP", name, params);
+
         lynk.connections[name] = new JitsiMeetJS.JitsiConnection(null, null, lynk.options);
         lynk.connections[name].params = params;
 
@@ -119,7 +121,7 @@ var etherlynk = (function(lynk)
 
             lynk.connections[name].addEventListener(JitsiMeetJS.events.connection.CONNECTION_DISCONNECTED, function()
             {
-                console.log("Connection Disconnected!", name)
+                //console.log("Connection Disconnected!", name)
                 $(document).trigger("ofmeet.conference.left", {id : lynkUI.username, name: name});
             });
 
@@ -133,7 +135,7 @@ var etherlynk = (function(lynk)
 
     function setupLocalTracks(name, tracks)
     {
-        console.log("setupLocalTracks!", name);
+        //console.log("setupLocalTracks!", name);
 
         for(var i = 0; i < tracks.length; i++)
         {
@@ -163,7 +165,7 @@ var etherlynk = (function(lynk)
 
     function setupConference(name, tracks, params)
     {
-        console.log("setupConference!", name);
+        //console.log("setupConference!", name);
 
         setupLocalTracks(name, tracks)
 
@@ -171,17 +173,17 @@ var etherlynk = (function(lynk)
 
         room.on(JitsiMeetJS.events.conference.TRACK_ADDED, function (track)
         {
-            console.log("track addedd!!!", track);
+            //console.log("track addedd!!!", track);
 
             if(track.isLocal())
             {
                 if (Object.getOwnPropertyNames(lynk.conferences).length == 1)
                 {
                     lynk.recognition.start();
-                    console.log("Etherlynk recognition started ok");
-
-                    if (lynkUI.enableSip && params.sip) dial(name);
+                    //console.log("Etherlynk recognition started ok");
                 }
+
+                if (lynkUI.enableSip && params.sip) dial(name);
 
                 return;
             }
@@ -225,7 +227,7 @@ var etherlynk = (function(lynk)
 
         room.on(JitsiMeetJS.events.conference.TRACK_REMOVED, function (track)
         {
-            console.log("track removed!!!", track, name);
+            //console.log("track removed!!!", track, name);
 
             if (lynkUI.username != track.getParticipantId())
             {
@@ -235,32 +237,32 @@ var etherlynk = (function(lynk)
 
         room.on(JitsiMeetJS.events.conference.CONFERENCE_JOINED, function ()
         {
-            console.log("conference joined!", name);
+            //console.log("conference joined!", name);
             room.addTrack(lynk.localAudioTracks[name]);
 
             $(document).trigger("ofmeet.conference.joined", {id : lynkUI.username, name: name});
         });
         room.on(JitsiMeetJS.events.conference.CONFERENCE_LEFT, function ()
         {
-            console.log("conference left!", name);
+            //console.log("conference left!", name);
             room.removeTrack(lynk.localAudioTracks[name]);
 
             $(document).trigger("ofmeet.conference.left", {id : lynkUI.username, name: name});
         });
         room.on(JitsiMeetJS.events.conference.USER_JOINED, function (id)
         {
-            console.log("user join", name, id);
+            //console.log("user join", name, id);
             $(document).trigger("ofmeet.user.joined", {id : id, name: name});
         });
         room.on(JitsiMeetJS.events.conference.USER_LEFT, function (id)
         {
-            console.log("user left", name, id);
+            //console.log("user left", name, id);
             $(document).trigger("ofmeet.user.left", {id : id, name: name});
         });
 
         room.on(JitsiMeetJS.events.conference.DOMINANT_SPEAKER_CHANGED, function (id)
         {
-            console.log("dominant speaker changed", name, id);
+            //console.log("dominant speaker changed", name, id);
             $(document).trigger("ofmeet.dominant.speaker", {id: id});
         });
 
@@ -271,7 +273,7 @@ var etherlynk = (function(lynk)
 
     function handleMessage(json)
     {
-        console.log("handleMessage", json);
+        //console.log("handleMessage", json);
     }
 
     function setupConfig(server, domain, username, password)
@@ -315,7 +317,7 @@ var etherlynk = (function(lynk)
 
         lynk.recognition.onresult = function(event)
         {
-            console.log("Speech recog event", event)
+            //console.log("Speech recog event", event)
 
             lynk.currentTranslation = [];
 
@@ -324,7 +326,7 @@ var etherlynk = (function(lynk)
                 if(event.results[i].isFinal==true)
                 {
                     var transcript = event.results[i][0].transcript;
-                    console.log("Speech recog transcript", transcript);
+                    //console.log("Speech recog transcript", transcript);
                     lynk.currentTranslation.push(transcript);
                 }
             }
@@ -332,7 +334,7 @@ var etherlynk = (function(lynk)
 
         lynk.recognition.onspeechend  = function(event)
         {
-            console.log("Speech recog ","speechend", event);
+            //console.log("Speech recog ","speechend", event);
             sendSpeechRecognition()
         }
 
@@ -359,7 +361,7 @@ var etherlynk = (function(lynk)
                 var message = "<" + alias + " says: " + result + ">"
 
                 conn.send($msg({to:room, type:"groupchat"}).c("body").t(message).up());
-                console.log("Speech recog result", room, conn.jid, result);
+                //console.log("Speech recog result", room, conn.jid, result);
             }
 
             lynk.currentTranslation = [];
@@ -374,7 +376,7 @@ var etherlynk = (function(lynk)
 
     function connectSIP(server, domain, username, password)
     {
-        console.log("connectSIP", lynk.options);
+        //console.log("connectSIP", lynk.options);
 
         lynk.sip.sessions = {}
         lynk.sip.remoteAudioElements = {};
@@ -419,10 +421,21 @@ var etherlynk = (function(lynk)
             return stunServers;
         }
 
+        var uri = 'sip:default@' + lynk.options.hosts.sip;
+        var wsServers = "wss://" + lynk.options.hosts.server + "/sip/proxy?url=ws://" + lynk.options.hosts.sip + ":5066";
+
+        if (lynkUI.sip.authUsername)
+        {
+            uri = 'sip:' + lynkUI.sip.authUsername + '@' + lynkUI.sip.server;
+            wsServers = "wss://" + lynk.options.hosts.server + "/sip/proxy?url=ws://" + lynkUI.sip.server + ":5066";
+        }
+
         lynk.sip.sipUI = new SIP.UA(
         {
-            uri             : 'sip:default@' + lynk.options.hosts.sip,
-            wsServers       : "wss://" + lynk.options.hosts.server + "/sip/proxy?url=ws://" + lynk.options.hosts.sip + ":5066",
+            password        : lynkUI.sip.password,
+            displayName     : lynkUI.sip.displayPhoneNum ? lynkUI.sip.displayPhoneNum:  lynk.options.nickName,
+            uri             : uri,
+            wsServers       : wsServers,
             turnServers     : getTurnServers(),
             stunServers     : getStunServers(),
             registerExpires : 30,
@@ -434,27 +447,34 @@ var etherlynk = (function(lynk)
         });
 
         lynk.sip.sipUI.on('connected', function(e) {
-            console.log("SIP Connected");
+            //console.log("SIP Connected");
+            lynkUI.sip.registered = false;
         });
 
         lynk.sip.sipUI.on('disconnected', function(e) {
-            console.log("SIP Disconnected");
+            //console.log("SIP Disconnected");
+            lynkUI.sip.registered = false;
         });
 
         lynk.sip.sipUI.on('registered', function(e) {
-            console.log("SIP Registered");
+            //console.log("SIP Registered");
+            lynkUI.sip.registered = true;
         });
 
         lynk.sip.sipUI.on('registrationFailed', function(e) {
-            console.log("Error: Registration Failed");
+            //console.log("Error: Registration Failed");
+            lynkUI.sip.registered = false;
+            if (lynkUI.sip.authUsername) etherlynkXmpp.setSipStatus("Registered");
         });
 
         lynk.sip.sipUI.on('unregistered', function(e) {
-            console.log("Error: Unregistered");
+            //console.log("Error: Unregistered");
+            lynkUI.sip.registered = false;
+            if (lynkUI.sip.authUsername) etherlynkXmpp.setSipStatus("Registered");
         });
 
         lynk.sip.sipUI.on('message', function(message) {
-            console.log("SIP Message", message.body);
+            //console.log("SIP Message", message.body);
 
             var data = {};
 
@@ -463,22 +483,76 @@ var etherlynk = (function(lynk)
                 try {
                     data = JSON.parse(message.body);
 
-                    console.log("JSON Object", data);
+                    //console.log("JSON Object", data);
 
                 } catch (e) {
                     console.error(e);
                 }
             }
         });
+
+        lynk.sip.sipUI.on('invite', function (incomingSession) {
+            //console.log("SIP Invite", incomingSession);
+
+            lynkUI.sip.incomingSession = incomingSession;
+
+            if (lynkUI.sip.localAudioStream)
+            {
+              accept();
+
+            } else {
+                navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+                navigator.getUserMedia({ audio : true, video : false }, getUserMediaSuccess, getUserMediaFailure);
+            }
+        });
+    }
+
+	function getUserMediaSuccess(stream)
+	{
+		lynkUI.sip.localAudioStream = stream;
+		accept();
+	}
+
+	function getUserMediaFailure(e)
+	{
+		console.error('getUserMedia failed:', e);
+	}
+
+    function accept()
+    {
+		var displayName = lynkUI.sip.incomingSession.remoteIdentity.displayName
+		var cli = lynkUI.sip.incomingSession.remoteIdentity.uri.user;
+		var uri = lynkUI.sip.incomingSession.remoteIdentity.uri.toString();
+
+		if (uri.startsWith("sip:")) uri = uri.substring(4);
+
+		console.log("accept", displayName, cli, uri);
+
+        if (lynkUI.sip.incomingSession.request.headers["Call-Info"] &&
+            lynkUI.sip.incomingSession.request.headers["Call-Info"][0] &&
+            lynkUI.sip.incomingSession.request.headers["Call-Info"][0].raw.indexOf("answer-after=0") > -1)
+        {
+            lynkUI.sip.incomingSession.accept({
+                media : {
+                stream      : lynkUI.sip.localAudioStream,
+                constraints : { audio : true, video : false },
+                render      : { remote : new Audio()},
+                }
+            });
+        }
+        else {		//TODO UI
+            lynkUI.sip.incomingCall = true;
+
+		}
     }
 
     function dial(name)
     {
-        console.log("dial", name);
+        //console.log("dial", name);
 
         var setupRemoteAudio = function(name)
         {
-            console.log("setupRemoteAudio!", name);
+            //console.log("setupRemoteAudio!", name);
 
             var id = "remoteAudio-sip-" + name;
             var audio = document.getElementById(id);
@@ -530,7 +604,7 @@ var etherlynk = (function(lynk)
 
         JitsiMeetJS.init({disableAudioLevels: true}).then(function()
         {
-            console.log("Etherlynk login ok", server, domain, username);
+            //console.log("Etherlynk login ok", server, domain, username);
 
             lynk.connection = new Strophe.Connection("wss://" + server + "/ws/");
             //lynk.connection = new Strophe.Connection("https://" + server + "/http-bind/");
@@ -541,8 +615,6 @@ var etherlynk = (function(lynk)
                 {
                     lynk.connection.send($pres());
                     if (callback) callback(status);
-
-                    if (lynkUI.enableSip) connectSIP(server, domain, username, password);
                 }
             });
 
@@ -557,7 +629,7 @@ var etherlynk = (function(lynk)
 
     lynk.logoff = function()
     {
-        console.log("Etherlynk logoff");
+        //console.log("Etherlynk logoff");
 
         if (lynk.connection) lynk.connection.disconnect();
 
@@ -574,14 +646,19 @@ var etherlynk = (function(lynk)
             lynk.sip.sipUI.stop();
         }
 
-        console.log("Etherlynk logoff ok");
+        //console.log("Etherlynk logoff ok");
     }
 
     lynk.join = function(name, server, domain, params)
     {
         connectXMPP(name, params)
-        console.log("Etherlynk join " + name, server, domain);
+        //console.log("Etherlynk join " + name, server, domain, params);
     }
+
+    lynk.loginSip = function(server, domain, username, password)
+    {
+    	connectSIP(lynkUI.server, lynkUI.domain, lynkUI.username, lynkUI.password);
+	}
 
     lynk.mute = function(name)
     {
@@ -606,7 +683,7 @@ var etherlynk = (function(lynk)
         {
             sendSpeechRecognition()
             lynk.recognition.stop();
-            console.log("Etherlynk recognition stopped");
+            //console.log("Etherlynk recognition stopped");
         }
 
         if (lynk.connections[name])
@@ -614,7 +691,7 @@ var etherlynk = (function(lynk)
             lynk.connections[name].xmpp.connection.ping.stopInterval();
             cleanupConnection(name);
 
-            console.log("Etherlynk leave " + name);
+            //console.log("Etherlynk leave " + name);
         }
     }
 
@@ -626,12 +703,12 @@ var etherlynk = (function(lynk)
 
                 function(response)
                 {
-                    console.log("lynk.send.response", response);
+                    //console.log("lynk.send.response", response);
                 },
 
                 function(error)
                 {
-                    console.log("lynk.send.error", error);
+                    //console.log("lynk.send.error", error);
                 }
             );
         }
