@@ -179,7 +179,7 @@ var etherlynk = (function(lynk)
             {
                 if (Object.getOwnPropertyNames(lynk.conferences).length == 1)
                 {
-                    lynk.recognition.start();
+                    //lynk.recognition.start();
                     //console.log("Etherlynk recognition started ok");
                 }
 
@@ -619,7 +619,7 @@ var etherlynk = (function(lynk)
             });
 
             setupConfig(server, domain, username, password);
-            setupSpeechRecognition();
+            //setupSpeechRecognition();
 
         }).catch(function (error) {
             console.log(error);
@@ -681,8 +681,8 @@ var etherlynk = (function(lynk)
 
         if (Object.getOwnPropertyNames(lynk.conferences).length == 1)
         {
-            sendSpeechRecognition()
-            lynk.recognition.stop();
+            //sendSpeechRecognition()
+            //lynk.recognition.stop();
             //console.log("Etherlynk recognition stopped");
         }
 

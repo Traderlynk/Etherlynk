@@ -322,7 +322,7 @@ var etherlynkXmpp = (function(xmpp)
 
 	xmpp.setSipStatus = function (status)
 	{
-		etherlynk.connection.sendIQ($iq({type: 'get', to: "sipark." + etherlynk.connection.domain}).c('registration', {jid: pade.connection.jid, xmlns: "http://www.jivesoftware.com/protocol/sipark"}).c('status').t(status).tree(), function(resp)
+		etherlynk.connection.sendIQ($iq({type: 'get', to: "sipark." + etherlynk.connection.domain}).c('registration', {jid: etherlynk.connection.jid, xmlns: "http://www.jivesoftware.com/protocol/sipark"}).c('status').t(status).tree(), function(resp)
 		{
 			console.log("setSipStatus", status);
 
