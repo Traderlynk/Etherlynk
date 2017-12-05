@@ -20,10 +20,8 @@ var etherlynk = (function(lynk)
     //
     //-------------------------------------------------------
 
-    function cleanupConnection(name)
-    {
-        //console.log("cleanupConnection", name);
-
+	function cleanupMedia(name)
+	{
         if (lynk.localAudioTracks[name])
         {
             //console.info("cleanupConnection: remove localtrack");
@@ -55,6 +53,13 @@ var etherlynk = (function(lynk)
 
             delete lynk.remoteAudioTracks[name];
         }
+	}
+
+    function cleanupConnection(name)
+    {
+        //console.log("cleanupConnection", name);
+
+		cleanupMedia(name);
 
         if (lynk.conferences[name])
         {
@@ -91,7 +96,7 @@ var etherlynk = (function(lynk)
         }
     }
 
-    function connectXMPP(name, params)
+    function connectXMPP(name, params, callback)
     {
 		//console.log("connectXMPP", name, params);
 
@@ -495,21 +500,78 @@ var etherlynk = (function(lynk)
             //console.log("SIP Invite", incomingSession);
 
             lynkUI.sip.incomingSession = incomingSession;
+			var id = lynkUI.sip.incomingSession.remoteIdentity.uri.user;
+            setupCallHandlers(incomingSession);
 
-            if (lynkUI.sip.localAudioStream)
-            {
-              accept();
+			JitsiMeetJS.createLocalTracks({devices: ["audio"]}).then(function(tracks)
+			{
+				setupLocalTracks(id, tracks);
+				accept();
 
-            } else {
-                navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-                navigator.getUserMedia({ audio : true, video : false }, getUserMediaSuccess, getUserMediaFailure);
-            }
+			}).catch(function (error)
+			{
+				console.error("sip invite error", error)
+			});
         });
     }
 
+	function setupCallHandlers(newSess)
+	{
+		var displayName = newSess.remoteIdentity.displayName
+		var uri = newSess.remoteIdentity.uri.toString();
+		var id = newSess.remoteIdentity.uri.user;
+
+		newSess.on('progress', function(e) {
+			console.log("progress", displayName, uri);
+		});
+
+		newSess.on('connecting', function(e) {
+			console.log("connecting", displayName, uri);
+		});
+
+		newSess.on('accepted', function(e) {
+			console.log("accepted", displayName, uri);
+		});
+
+		newSess.on('hold', function(e) {
+			console.log("hold", displayName, uri);
+		});
+
+		newSess.on('unhold', function(e) {
+			console.log("unhold", displayName, uri);
+		});
+
+		newSess.on('muted', function(e) {
+			console.log("muted", displayName, uri);
+		});
+
+		newSess.on('unmuted', function(e) {
+			console.log("unmuted", displayName, uri);
+		});
+
+		newSess.on('cancel', function(e) {
+			console.log("cancel", displayName, uri);
+		});
+
+		newSess.on('bye', function(e) {
+			console.log("bye", displayName, uri);
+			cleanupMedia(id);
+			$(document).trigger('ofmeet.conversation.sip.bye', [{id: id, uri: uri, displayName: displayName}]);
+		});
+
+		newSess.on('failed', function(e) {
+			console.log("failed", displayName, uri);
+		});
+
+		newSess.on('rejected', function(e) {
+			console.log("rejected", displayName, uri);
+		});
+	}
+
 	function getUserMediaSuccess(stream)
 	{
-		lynkUI.sip.localAudioStream = stream;
+		var id = lynkUI.sip.incomingSession.remoteIdentity.uri.user;
+		lynk.localAudioTracks[id].stream = stream;
 		accept();
 	}
 
@@ -521,56 +583,55 @@ var etherlynk = (function(lynk)
     function accept()
     {
 		var displayName = lynkUI.sip.incomingSession.remoteIdentity.displayName
-		var cli = lynkUI.sip.incomingSession.remoteIdentity.uri.user;
+		var id = lynkUI.sip.incomingSession.remoteIdentity.uri.user;
 		var uri = lynkUI.sip.incomingSession.remoteIdentity.uri.toString();
+		var autoAccept = false;
 
 		if (uri.startsWith("sip:")) uri = uri.substring(4);
 
-		console.log("accept", displayName, cli, uri);
+		console.log("accept", displayName, id, uri);
 
         if (lynkUI.sip.incomingSession.request.headers["Call-Info"] &&
             lynkUI.sip.incomingSession.request.headers["Call-Info"][0] &&
             lynkUI.sip.incomingSession.request.headers["Call-Info"][0].raw.indexOf("answer-after=0") > -1)
         {
-            lynkUI.sip.incomingSession.accept({
-                media : {
-                stream      : lynkUI.sip.localAudioStream,
-                constraints : { audio : true, video : false },
-                render      : { remote : new Audio()},
-                }
-            });
+			autoAccept = true;
         }
-        else {		//TODO UI
-            lynkUI.sip.incomingCall = true;
 
+		if (autoAccept)
+		{
+			lynk.localAudioTracks[id].track.enabled = false;
 		}
+
+       	lynkUI.sip.incomingCall = true;
+		$(document).trigger('ofmeet.conversation.sip.incoming', [{id: id, uri: uri, displayName: displayName, autoAccept: autoAccept}]);
     }
+
+	function setupRemoteAudio(name)
+	{
+		console.log("setupRemoteAudio!", name);
+
+		var id = "remoteAudio-sip-" + name;
+		var audio = document.getElementById(id);
+
+		if (!audio)
+		{
+			audio = new Audio();
+			audio.id = id;
+			audio.controls = false;
+			audio.autoplay = true;
+			audio.muted = false;
+			audio.volume = 1;
+			document.body.appendChild(audio);
+		}
+
+		lynk.sip.remoteAudioElements[name] = audio;
+		return audio;
+	}
 
     function dial(name)
     {
         //console.log("dial", name);
-
-        var setupRemoteAudio = function(name)
-        {
-            //console.log("setupRemoteAudio!", name);
-
-            var id = "remoteAudio-sip-" + name;
-            var audio = document.getElementById(id);
-
-            if (!audio)
-            {
-                audio = new Audio();
-                audio.id = id;
-                audio.controls = false;
-                audio.autoplay = true;
-                audio.muted = false;
-                audio.volume = 1;
-                document.body.appendChild(audio);
-            }
-
-            lynk.sip.remoteAudioElements[name] = audio;
-            return audio;
-        }
 
         try {
 
@@ -587,10 +648,13 @@ var etherlynk = (function(lynk)
             lynk.sip.sessions[name].direction = 'outgoing';
             lynk.sip.sessions[name].sessionId  = Math.random().toString(36).substr(2, 9);
 
+            setupCallHandlers(lynk.sip.sessions[name]);
+
         } catch(e) {
             console.error("dial failed", e);
         }
     }
+
 
     //-------------------------------------------------------
     //
@@ -659,6 +723,43 @@ var etherlynk = (function(lynk)
     {
     	connectSIP(lynkUI.server, lynkUI.domain, lynkUI.username, lynkUI.password);
 	}
+
+    lynk.acceptSipCall = function()
+    {
+		if (lynkUI.sip.incomingSession)
+		{
+			var id = lynkUI.sip.incomingSession.remoteIdentity.uri.user;
+
+			lynkUI.sip.incomingSession.accept({
+				media : {
+				stream      : lynk.localAudioTracks[id].stream,
+				constraints : { audio : true, video : false },
+				render      : { remote : setupRemoteAudio(id)},
+				}
+			});
+
+		} else {
+			console.error("No incoming SIP call");
+		}
+	}
+
+    lynk.hangupSipCall = function()
+    {
+        if (lynkUI.sip.incomingSession)
+        {
+            if (lynkUI.sip.incomingSession.startTime) {
+                lynkUI.sip.incomingSession.bye();
+
+            } else if (lynkUI.sip.incomingSession.reject) {
+                lynkUI.sip.incomingSession.reject();
+
+            } else if (lynkUI.sip.incomingSession.cancel) {
+                lynkUI.sip.incomingSession.cancel();
+            }
+
+            lynkUI.sip.incomingSession = null;
+        }
+    }
 
     lynk.mute = function(name)
     {

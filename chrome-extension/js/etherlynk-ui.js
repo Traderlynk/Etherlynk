@@ -94,6 +94,88 @@ function getEtherlynks()
         }
     });
 
+    $(document).bind('ofmeet.conversation.sip.bye', function(event, bye)
+    {
+        console.log('ofmeet.user.gone', bye);
+
+        if (lynkUI.ringtone) stopTone();
+
+        chrome.notifications.clear(bye.id, function(wasCleared)
+        {
+            //console.log"call cleared", wasCleared);
+        });
+
+        for(var z = 0; z<lynkUI.calls.length; z++)
+        {
+            if (lynkUI.calls[z])
+            {
+                var lynk = lynkUI.calls[z].lynk;
+
+                if (bye.id.indexOf(lynk.id) > -1)
+                {
+                    changeButton(parseInt(lynk.pinId), lynk.presence, lynk.name);
+                    clearActiveButton();
+                    setActiveLynk(null);
+                    break;
+                }
+            }
+        }
+	});
+
+    $(document).bind('ofmeet.conversation.sip.incoming', function(event, invite)
+    {
+		console.log("ofmeet.conversation.sip.incoming", invite);
+
+        for(var z = 0; z<lynkUI.calls.length; z++)
+        {
+            if (lynkUI.calls[z])
+            {
+                var lynk = lynkUI.calls[z].lynk;
+
+                if (invite.id == lynk.id)
+                {
+					console.log("ofmeet.conversation.sip.accepted found", lynk);
+
+					if (invite.autoAccept)
+					{
+						etherlynk.acceptSipCall();
+						lynk.autoAccept = true;
+						setActiveLynk(lynk);
+
+						etherlynk.muteLocal(lynk.etherlynk, true);
+						changeButton(parseInt(lynk.pinId), "red", lynk.name);
+					}
+					else {
+						changeButton(parseInt(lynk.pinId), "redflash", lynk.name);
+						startTone("Diggztone_Vibe");
+
+						lynk.autoAccept = false;
+
+						notifyText(lynk.name, lynk.jid, null, [{title: "Accept Conversation?", iconUrl: chrome.extension.getURL("success-16x16.gif")}, {title: "Reject Conversation?", iconUrl: chrome.extension.getURL("forbidden-16x16.gif")}], function(notificationId, buttonIndex)
+						{
+							//console.log"handleAction callback", notificationId, buttonIndex);
+
+							if (buttonIndex == 0)   // accept
+							{
+								etherlynk.acceptSipCall();
+								setActiveLynk(lynk);
+							}
+							else
+
+							if (buttonIndex == 1)   // reject
+							{
+								changeButton(parseInt(lynk.pinId), lynk.presence, lynk.name);
+								if (lynkUI.ringtone) stopTone();
+							}
+
+						}, invite.id);
+					}
+					break;
+				}
+			}
+		}
+	});
+
     $(document).bind('ofmeet.conversation.invitation', function(event, invite)
     {
         //console.log'ofmeet.conversation.invitation', invite);
@@ -121,7 +203,6 @@ function getEtherlynks()
 
 						etherlynk.muteLocal(lynk.etherlynk, true);
 						changeButton(parseInt(lynk.pinId), "red", lynk.name);
-            			startTone("ringback-uk");
 					}
 					else {
 						changeButton(parseInt(lynk.pinId), "redflash", lynk.name);
@@ -162,7 +243,7 @@ function getEtherlynks()
 
         for(var z = 0; z<lynkUI.conferences.length; z++)
         {
-            if (lynkUI.conferences[z])
+            if (lynkUI.conferences[z])					// auto-mute hoot conferences
             {
                 var lynk = lynkUI.conferences[z].lynk;
 
@@ -429,6 +510,8 @@ function clearActiveButton()
         var color = lynkUI.participants[lynkUI.currentLynk.etherlynk] && lynkUI.participants[lynkUI.currentLynk.etherlynk] > 0 ? "yellow" : lynkUI.currentLynk.presence;
         changeButton(parseInt(lynkUI.currentLynk.pinId), color, lynkUI.currentLynk.name);
         changeButton(98, null, "CLEAR");
+
+        lynkUI.currentLynk.autoAccept = false;
     }
 }
 
@@ -440,8 +523,11 @@ function setActiveLynk(lynk)
         etherlynkXmpp.broadcastConference(lynk, "active");
 
     } else {
-        lynkUI.currentLynk.active = false;
-        if (!lynkUI.currentLynk.barge) etherlynkXmpp.broadcastConference(lynkUI.currentLynk, "inactive");
+        if (lynkUI.currentLynk)
+        {
+			lynkUI.currentLynk.active = false;
+        	if (!lynkUI.currentLynk.barge) etherlynkXmpp.broadcastConference(lynkUI.currentLynk, "inactive");
+		}
     }
 
     lynkUI.currentLynk = lynk;
@@ -462,9 +548,6 @@ function handleButtonPress(button)
 			if (data.button[1] == data.lynk.presence)       // idle
 			{
 				clearActiveCall();
-
-				data.lynk.etherlynk = lynkUI.username < data.lynk.id ? lynkUI.username + data.lynk.id : data.lynk.id + lynkUI.username;
-
 				startTone("ringback-uk");
 				etherlynk.join(data.lynk.etherlynk, data.lynk.server, data.lynk.domain, {mute: false, sip: lynkUI.enableSip, xmpp: data.lynk.type == "xmpp", jid: data.lynk.jid});
 				changeButton(button, "greenflash", data.button[2]);
@@ -583,8 +666,7 @@ function handleButtonPress(button)
     {
         if (lynkUI.currentLynk)
         {
-            etherlynkXmpp.leaveConference(lynkUI.currentLynk);
-            etherlynk.leave(lynkUI.currentLynk.etherlynk);
+			handleExit(lynkUI.currentLynk);
         }
 
     }
@@ -675,13 +757,31 @@ function handleButtonHeld(button)
 
     if (data.type == "call")
     {
+		if (!lynkUI.currentLynk) lynkUI.currentLynk = data.lynk;	// HACK TODO
+
         if (data.button[1] == "greenflash" || data.button[1] == "red" || data.button[1] == "green")
         {
-            etherlynkXmpp.leaveConference(data.lynk);
-            etherlynk.leave(data.lynk.etherlynk);
+			handleExit(data.lynk);
         }
     }
 }
+
+function handleExit(lynk)
+{
+	if (lynk.type == "xmpp")
+	{
+		etherlynkXmpp.leaveConference(lynk);
+	}
+	else
+
+	if (lynk.type == "sip")
+	{
+		etherlynk.hangupSipCall();
+	}
+
+	etherlynk.leave(lynk.etherlynk);
+}
+
 
 function handleSlider(slider, value)
 {

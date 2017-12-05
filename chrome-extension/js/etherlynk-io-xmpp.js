@@ -207,6 +207,7 @@ var etherlynkXmpp = (function(xmpp)
 						open: "false",
 						active: false,
 						type: "sip",
+                    	etherlynk: uri[0],
 						server: uri[1],
 						domain: uri[1]
 					});
@@ -228,6 +229,7 @@ var etherlynkXmpp = (function(xmpp)
                 var name = $(this).attr("name");
                 var domain = Strophe.getDomainFromJid(jid);
                 var server = domain + ":7443";
+				var etherlynk = lynkUI.username < id ? lynkUI.username + id : uid + lynkUI.username;
 
                 //console.log('ofmeet.roster.item',jid, name, server);
 
@@ -243,6 +245,7 @@ var etherlynkXmpp = (function(xmpp)
                     active: false,
                     server: server,
                     type: "xmpp",
+                    etherlynk: etherlynk,
                     domain: domain
                 });
 
