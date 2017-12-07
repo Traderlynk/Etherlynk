@@ -50,6 +50,38 @@ var etherlynkXmpp = (function(xmpp)
                 return true;
             });
 
+            $(message).find('body').each(function ()   //looking for commands
+            {
+				var sender = Strophe.getNodeFromJid(from);
+
+				if (!sender || sender == "")
+				{
+					var command = $(this).text();
+
+					if (command.startsWith("{") && command.endsWith("}"))
+					{
+						//console.log("Got command", command);
+						command = JSON.parse(command);
+
+						if (command.action = "openApcWindow" && command.userid == "null" && command.contact == "null")
+						{
+							openApcWindow();
+						}
+						else
+
+						if (command.contact)
+						{
+							// {"contact": "Contacts=<sip:nigel.skeels@tlk.lan>"}
+							var id = command.contact.split(":")[1].split("@")[0];
+							$(document).trigger('ofmeet.conversation.sip.outgoing', [{id: id}]);
+						}
+
+
+						return true;
+					}
+				}
+			});
+
             $(message).find('inactive').each(function ()   // user actually leaves conversation
             {
                 var jid = $(this).attr("jid");

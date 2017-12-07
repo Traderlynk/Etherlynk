@@ -1,6 +1,6 @@
 window.addEvent("domready", function () {
 
-    window.localStorage["store.settings.config"] = null;
+    doDefaults();
 
     new FancySettings.initWithManifest(function (settings)
     {
@@ -9,6 +9,17 @@ window.addEvent("domready", function () {
         settings.manifest.connect.addEvent("action", function ()
         {
             reloadApp()
+        });
+
+        settings.manifest.popupWindow.addEvent("action", function ()
+        {
+            if (getSetting("popupWindow"))
+            {
+                chrome.browserAction.setPopup({popup: ""});
+
+            } else {
+                chrome.browserAction.setPopup({popup: "popup.html"});
+            }
         });
 
         function reloadApp(){
@@ -41,6 +52,34 @@ window.addEvent("domready", function () {
 	     	} else settings.manifest.status.element.innerHTML = '<b>bad bad server, domain, username or password</b>';
 	}
     });
-
-
 });
+
+function doDefaults()
+{
+    window.localStorage["store.settings.config"] = null;
+
+    // preferences
+    setSetting("popupWindow", true);
+}
+function setSetting(name, defaultValue)
+{
+    console.log("setSetting", name, defaultValue);
+
+    if (!window.localStorage["store.settings." + name])
+    {
+        if (defaultValue) window.localStorage["store.settings." + name] = JSON.stringify(defaultValue);
+    }
+}
+
+function getSetting(name)
+{
+    //console.log("getSetting", name);
+    var value = null;
+
+    if (window.localStorage["store.settings." + name])
+    {
+        value = JSON.parse(window.localStorage["store.settings." + name]);
+    }
+
+    return value;
+}

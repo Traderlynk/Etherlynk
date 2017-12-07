@@ -568,18 +568,6 @@ var etherlynk = (function(lynk)
 		});
 	}
 
-	function getUserMediaSuccess(stream)
-	{
-		var id = lynkUI.sip.incomingSession.remoteIdentity.uri.user;
-		lynk.localAudioTracks[id].stream = stream;
-		accept();
-	}
-
-	function getUserMediaFailure(e)
-	{
-		console.error('getUserMedia failed:', e);
-	}
-
     function accept()
     {
 		var displayName = lynkUI.sip.incomingSession.remoteIdentity.displayName
@@ -598,13 +586,21 @@ var etherlynk = (function(lynk)
 			autoAccept = true;
         }
 
-		if (autoAccept)
-		{
-			lynk.localAudioTracks[id].track.enabled = false;
-		}
-
        	lynkUI.sip.incomingCall = true;
-		$(document).trigger('ofmeet.conversation.sip.incoming', [{id: id, uri: uri, displayName: displayName, autoAccept: autoAccept}]);
+
+       	if (lynkUI.sip.displayPhoneNum == id) // autoaccept self calls
+       	{
+       		lynk.acceptSipCall();
+
+		} else {
+
+			if (autoAccept)
+			{
+				lynk.localAudioTracks[id].track.enabled = false;
+			}
+
+			$(document).trigger('ofmeet.conversation.sip.incoming', [{id: id, uri: uri, displayName: displayName, autoAccept: autoAccept}]);
+		}
     }
 
 	function setupRemoteAudio(name)

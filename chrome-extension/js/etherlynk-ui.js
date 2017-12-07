@@ -122,6 +122,28 @@ function getEtherlynks()
         }
 	});
 
+    $(document).bind('ofmeet.conversation.sip.outgoing', function(event, outgoing)
+    {
+		console.log("ofmeet.conversation.sip.outgoing", outgoing);
+
+        for(var z = 0; z<lynkUI.calls.length; z++)
+        {
+            if (lynkUI.calls[z])
+            {
+                var lynk = lynkUI.calls[z].lynk;
+
+                if (outgoing.id == lynk.id)
+                {
+					console.log("ofmeet.conversation.sip.outgoing found", lynk);
+
+					makeCall(lynkUI.calls[lynk.pinId]);
+					break
+				}
+			}
+		}
+	});
+
+
     $(document).bind('ofmeet.conversation.sip.incoming', function(event, invite)
     {
 		console.log("ofmeet.conversation.sip.incoming", invite);
@@ -533,13 +555,30 @@ function setActiveLynk(lynk)
     lynkUI.currentLynk = lynk;
 }
 
+function makeCall(data)
+{
+	clearActiveCall();
+	startTone("ringback-uk");
+	etherlynk.join(data.lynk.etherlynk, data.lynk.server, data.lynk.domain, {mute: false, sip: lynkUI.enableSip, xmpp: data.lynk.type == "xmpp", jid: data.lynk.jid});
+	changeButton(data.button[0], "greenflash", data.button[2]);
+
+	if (data.lynk.jid)
+	{
+		setActiveLynk(data.lynk);
+
+		if (data.lynk.type == "xmpp")
+		{
+			etherlynkXmpp.inviteToConference(data.lynk);
+		}
+	}
+}
 
 function handleButtonPress(button)
 {
 	// actions for button presses are handled here
 
     var data = handleButton(button);
-    //console.log"button press", button, data, lynkUI.currentLynk);
+    //console.log("button press", button, data, lynkUI.currentLynk);
 
     if (data.type == "call")
     {
@@ -547,21 +586,7 @@ function handleButtonPress(button)
 		{
 			if (data.button[1] == data.lynk.presence)       // idle
 			{
-				clearActiveCall();
-				startTone("ringback-uk");
-				etherlynk.join(data.lynk.etherlynk, data.lynk.server, data.lynk.domain, {mute: false, sip: lynkUI.enableSip, xmpp: data.lynk.type == "xmpp", jid: data.lynk.jid});
-				changeButton(button, "greenflash", data.button[2]);
-
-				if (data.lynk.jid)
-				{
-					setActiveLynk(data.lynk);
-
-					if (data.lynk.type == "xmpp")
-					{
-						etherlynkXmpp.inviteToConference(data.lynk);
-					}
-				}
-
+				makeCall(data);
 			}
 			else
 

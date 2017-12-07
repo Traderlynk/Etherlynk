@@ -61,6 +61,13 @@ this.manifest = {
         {
             "tab": i18n.get("general"),
             "group": i18n.get("Preferences"),
+            "name": "popupWindow",
+            "type": "checkbox",
+            "label": i18n.get("Popup Window")
+        },
+        {
+            "tab": i18n.get("general"),
+            "group": i18n.get("Preferences"),
             "name": "enableMidi",
             "type": "checkbox",
             "label": i18n.get("Enable Midi")

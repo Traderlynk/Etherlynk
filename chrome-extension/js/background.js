@@ -6,6 +6,23 @@ function reloadApp()
     chrome.runtime.reload();
 }
 
+function getSetting(name, defaultValue)
+{
+    //console.log("getSetting", name, defaultValue);
+
+    var value = defaultValue;
+
+    if (window.localStorage["store.settings." + name])
+    {
+        value = JSON.parse(window.localStorage["store.settings." + name]);
+
+    } else {
+        if (defaultValue) window.localStorage["store.settings." + name] = JSON.stringify(defaultValue);
+    }
+
+    return value;
+}
+
 function startTone(name)
 {
     if (window.localStorage["store.settings.enableRingtone"] && JSON.parse(window.localStorage["store.settings.enableRingtone"]))
@@ -114,6 +131,30 @@ function notifyList(message, context, items, buttons, callback)
         if (callback) callbacks[notificationId] = callback;
     });
 };
+
+function closeApcWindow()
+{
+    if (lynkUI.apcWindow != null)
+    {
+        chrome.windows.remove(lynkUI.apcWindow.id);
+        lynkUI.apcWindow = null;
+    }
+}
+
+function openApcWindow()
+{
+    if (lynkUI.apcWindow == null)
+    {
+        chrome.windows.create({url: chrome.extension.getURL("popup.html"), focused: true, type: "popup"}, function (win)
+        {
+            lynkUI.apcWindow = win;
+            chrome.windows.update(lynkUI.apcWindow.id, {drawAttention: true, width: 820, height: 640});
+        });
+
+    } else {
+        chrome.windows.update(lynkUI.apcWindow.id, {drawAttention: true, focused: true, width: 820, height: 640});
+    }
+}
 
 function closeVideoWindow()
 {
@@ -327,6 +368,9 @@ window.addEventListener("load", function()
             });
             return true;
 
+        } else if(request.openApcWindow) {
+			openApcWindow();
+
         } else {
             console.error("Unknown request");
             sendResponse({ error : "Unknown request" });
@@ -354,7 +398,7 @@ window.addEventListener("load", function()
 
     chrome.browserAction.onClicked.addListener(function()
     {
-        doOptions();
+        openApcWindow();
     });
 
     chrome.notifications.onButtonClicked.addListener(function(notificationId, buttonIndex)
@@ -385,6 +429,11 @@ window.addEventListener("load", function()
         if (lynkUI.videoWindow && win == lynkUI.videoWindow.id)
         {
             lynkUI.videoWindow = null;
+        }
+
+        if (lynkUI.apcWindow && win == lynkUI.apcWindow.id)
+        {
+            lynkUI.apcWindow = null;
         }
     });
 

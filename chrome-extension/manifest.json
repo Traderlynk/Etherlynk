@@ -19,9 +19,7 @@
       "default_icon": {
          "19": "tl_icon.png",
          "38": "tl_icon.png"
-      },  
-      "default_popup": "popup.html",      
-      "default_title": "Etherlynk"    
+      }  
   },
 
   "icons": {
