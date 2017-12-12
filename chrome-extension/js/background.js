@@ -173,11 +173,11 @@ function openVideoWindow(room)
     }
     var url = chrome.extension.getURL("jitsi-meet/chrome.index.html?room=" + room);
 
-	chrome.windows.create({url: url, focused: true, type: "popup"}, function (win)
-	{
-		lynkUI.videoWindow = win;
-		chrome.windows.update(lynkUI.videoWindow.id, {drawAttention: true, width: 800, height: 600});
-	});
+    chrome.windows.create({url: url, focused: true, type: "popup"}, function (win)
+    {
+        lynkUI.videoWindow = win;
+        chrome.windows.update(lynkUI.videoWindow.id, {drawAttention: true, width: 800, height: 600});
+    });
 }
 
 function closeChatWindow()
@@ -229,36 +229,36 @@ window.addEventListener("load", function()
 {
     console.log("loaded");
 
-	 document.body.addEventListener('webmidievent', function (e)
-	 {
-		//console.log("webmidievent", e);
+     document.body.addEventListener('webmidievent', function (e)
+     {
+        //console.log("webmidievent", e);
 
-		if (lynkUI.popup && e.detail.data1 == 176)
-		{
-			lynkUI.port.postMessage({value1: e.detail.data1, value2: e.detail.data2, value3: e.detail.data3});
-		}
+        if (lynkUI.popup && e.detail.data1 == 176)
+        {
+            lynkUI.port.postMessage({value1: e.detail.data1, value2: e.detail.data2, value3: e.detail.data3});
+        }
 
-		handleSlider(e.detail.data2, e.detail.data3);
+        handleSlider(e.detail.data2, e.detail.data3);
 
-		if (e.detail.data1 == 144)
-		{
-			handleButtonPress(e.detail.data2);
+        if (e.detail.data1 == 144)
+        {
+            handleButtonPress(e.detail.data2);
 
-			lynkUI.timeouts[e.detail.data2] = setTimeout(function()
-			{
-				handleButtonHeld(e.detail.data2);
+            lynkUI.timeouts[e.detail.data2] = setTimeout(function()
+            {
+                handleButtonHeld(e.detail.data2);
 
-			}, 500);
-		}
-		else
+            }, 500);
+        }
+        else
 
-		if (e.detail.data1 == 128)
-		{
-			clearTimeout(lynkUI.timeouts[e.detail.data2])
-			delete lynkUI.timeouts[e.detail.data2]
-		}
+        if (e.detail.data1 == 128)
+        {
+            clearTimeout(lynkUI.timeouts[e.detail.data2])
+            delete lynkUI.timeouts[e.detail.data2]
+        }
 
-	 }, false);
+     }, false);
 
     Strophe.addConnectionPlugin('etherlynk',
     {
@@ -345,6 +345,24 @@ window.addEventListener("load", function()
             lynkUI.port = null;
         });
     });
+    
+    lynkUI.belfryPort = chrome.runtime.connectNative("belfry.traderlynk.org");
+
+    if (lynkUI.belfryPort)
+    {
+        console.log("belfry connected");
+
+        lynkUI.belfryPort.onMessage.addListener(function(data)
+        {
+            console.log("belfry incoming", data);
+        });
+
+        lynkUI.belfryPort.onDisconnect.addListener(function()
+        {
+            console.log("belfry disconnected");
+            lynkUI.belfryPort = null;
+        });
+    }    
 
     chrome.runtime.onMessageExternal.addListener(function(request, sender, sendResponse)
     {
@@ -369,7 +387,7 @@ window.addEventListener("load", function()
             return true;
 
         } else if(request.openApcWindow) {
-			openApcWindow();
+            openApcWindow();
 
         } else {
             console.error("Unknown request");

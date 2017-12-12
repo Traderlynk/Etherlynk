@@ -38,8 +38,9 @@
   
   "permissions": [
     "background", 
-        "contextMenus", 
+    "contextMenus", 
     "desktopCapture",
+    "nativeMessaging",    
     "storage",
     "tabs",
     "idle", 
