@@ -52,35 +52,21 @@ var etherlynkXmpp = (function(xmpp)
 
             $(message).find('body').each(function ()   //looking for commands
             {
-				var sender = Strophe.getNodeFromJid(from);
+                var sender = Strophe.getNodeFromJid(from);
 
-				if (!sender || sender == "")
-				{
-					var command = $(this).text();
+                if (!sender || sender == "")
+                {
+                    var command = $(this).text();
 
-					if (command.startsWith("{") && command.endsWith("}"))
-					{
-						//console.log("Got command", command);
-						command = JSON.parse(command);
-
-						if (command.action = "openApcWindow" && command.userid == "null" && command.contact == "null")
-						{
-							openApcWindow();
-						}
-						else
-
-						if (command.contact)
-						{
-							// {"contact": "Contacts=<sip:nigel.skeels@tlk.lan>"}
-							var id = command.contact.split(":")[1].split("@")[0];
-							$(document).trigger('ofmeet.conversation.sip.outgoing', [{id: id}]);
-						}
-
-
-						return true;
-					}
-				}
-			});
+                    if (command.startsWith("{") && command.endsWith("}"))
+                    {
+                        //console.log("Got command", command);
+                        command = JSON.parse(command);
+                        handleExternalCommand(command);
+                        return true;
+                    }
+                }
+            });
 
             $(message).find('inactive').each(function ()   // user actually leaves conversation
             {
@@ -219,31 +205,31 @@ var etherlynkXmpp = (function(xmpp)
 
             $(resp).find('url').each(function()
             {
-				var name = $(this).attr("name");
-				var url = $(this).attr("url");
+                var name = $(this).attr("name");
+                var url = $(this).attr("url");
 
-				if (lynkUI.enableSip && url.indexOf("sip:") == 0 && url.indexOf("@") > -1)
-				{
-					var uri = url.substring(4).split("@");
+                if (lynkUI.enableSip && url.indexOf("sip:") == 0 && url.indexOf("@") > -1)
+                {
+                    var uri = url.substring(4).split("@");
 
-					//console.log('ofmeet.bookmark.url.item', {name: name, url: url, uri: uri});
+                    //console.log('ofmeet.bookmark.url.item', {name: name, url: url, uri: uri});
 
-					if (callback && contactPinId < 65) callback(
-					{
-						pinId: contactPinId--,
-						name: name,
-						pinned: "false",
-						id: uri[0],
-						jid: url.substring(4),
-						presence: "gray",
-						open: "false",
-						active: false,
-						type: "sip",
-                    	etherlynk: uri[0],
-						server: uri[1],
-						domain: uri[1]
-					});
-				}
+                    if (callback && contactPinId < 65) callback(
+                    {
+                        pinId: contactPinId--,
+                        name: name,
+                        pinned: "false",
+                        id: uri[0],
+                        jid: url.substring(4),
+                        presence: "gray",
+                        open: "false",
+                        active: false,
+                        type: "sip",
+                        etherlynk: uri[0],
+                        server: uri[1],
+                        domain: uri[1]
+                    });
+                }
             });
 
         }, function (error) {
@@ -261,7 +247,7 @@ var etherlynkXmpp = (function(xmpp)
                 var name = $(this).attr("name");
                 var domain = Strophe.getDomainFromJid(jid);
                 var server = domain + ":7443";
-				var etherlynk = lynkUI.username < id ? lynkUI.username + id : uid + lynkUI.username;
+                var etherlynk = lynkUI.username < id ? lynkUI.username + id : uid + lynkUI.username;
 
                 //console.log('ofmeet.roster.item',jid, name, server);
 
@@ -288,28 +274,28 @@ var etherlynkXmpp = (function(xmpp)
             console.error(error);
         });
 
-		if (lynkUI.enableSip)
-		{
-			etherlynk.connection.sendIQ($iq({type: 'get', to: "sipark." + etherlynk.connection.domain}).c('registration', {jid: etherlynk.connection.jid, xmlns: "http://www.jivesoftware.com/protocol/sipark"}).tree(), function(resp)
-			{
-				$(resp).find('jid').each(function()                 {lynkUI.sip.jid = $(this).text();});
-				$(resp).find('username').each(function()            {lynkUI.sip.username = $(this).text();});
-				$(resp).find('authUsername').each(function()        {lynkUI.sip.authUsername = $(this).text();});
-				$(resp).find('displayPhoneNum').each(function()     {lynkUI.sip.displayPhoneNum = $(this).text();});
-				$(resp).find('password').each(function()            {lynkUI.sip.password = $(this).text();});
-				$(resp).find('server').each(function()              {lynkUI.sip.server = $(this).text();});
-				$(resp).find('enabled').each(function()             {lynkUI.sip.enabled = $(this).text();});
-				$(resp).find('outboundproxy').each(function()       {lynkUI.sip.outboundproxy = $(this).text();});
-				$(resp).find('promptCredentials').each(function()   {lynkUI.sip.promptCredentials = $(this).text();});
+        if (lynkUI.enableSip)
+        {
+            etherlynk.connection.sendIQ($iq({type: 'get', to: "sipark." + etherlynk.connection.domain}).c('registration', {jid: etherlynk.connection.jid, xmlns: "http://www.jivesoftware.com/protocol/sipark"}).tree(), function(resp)
+            {
+                $(resp).find('jid').each(function()                 {lynkUI.sip.jid = $(this).text();});
+                $(resp).find('username').each(function()            {lynkUI.sip.username = $(this).text();});
+                $(resp).find('authUsername').each(function()        {lynkUI.sip.authUsername = $(this).text();});
+                $(resp).find('displayPhoneNum').each(function()     {lynkUI.sip.displayPhoneNum = $(this).text();});
+                $(resp).find('password').each(function()            {lynkUI.sip.password = $(this).text();});
+                $(resp).find('server').each(function()              {lynkUI.sip.server = $(this).text();});
+                $(resp).find('enabled').each(function()             {lynkUI.sip.enabled = $(this).text();});
+                $(resp).find('outboundproxy').each(function()       {lynkUI.sip.outboundproxy = $(this).text();});
+                $(resp).find('promptCredentials').each(function()   {lynkUI.sip.promptCredentials = $(this).text();});
 
-				console.log("get sip profile", lynkUI.sip);
-				etherlynk.loginSip();
+                console.log("get sip profile", lynkUI.sip);
+                etherlynk.loginSip();
 
-			}, function (error) {
-				console.warn("SIP profile not available");
-				etherlynk.loginSip();
-			});
-		}
+            }, function (error) {
+                console.warn("SIP profile not available");
+                etherlynk.loginSip();
+            });
+        }
     }
 
     xmpp.inviteToConference = function (lynk, mode)
@@ -355,16 +341,16 @@ var etherlynkXmpp = (function(xmpp)
         }
     }
 
-	xmpp.setSipStatus = function (status)
-	{
-		etherlynk.connection.sendIQ($iq({type: 'get', to: "sipark." + etherlynk.connection.domain}).c('registration', {jid: etherlynk.connection.jid, xmlns: "http://www.jivesoftware.com/protocol/sipark"}).c('status').t(status).tree(), function(resp)
-		{
-			console.log("setSipStatus", status);
+    xmpp.setSipStatus = function (status)
+    {
+        etherlynk.connection.sendIQ($iq({type: 'get', to: "sipark." + etherlynk.connection.domain}).c('registration', {jid: etherlynk.connection.jid, xmlns: "http://www.jivesoftware.com/protocol/sipark"}).c('status').t(status).tree(), function(resp)
+        {
+            console.log("setSipStatus", status);
 
-		}, function (error) {
-			console.error("setSipStatus", error);
-		});
-	}
+        }, function (error) {
+            console.error("setSipStatus", error);
+        });
+    }
 
 
     return xmpp;

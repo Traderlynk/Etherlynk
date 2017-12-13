@@ -352,9 +352,10 @@ window.addEventListener("load", function()
     {
         console.log("belfry connected");
 
-        lynkUI.belfryPort.onMessage.addListener(function(data)
+        lynkUI.belfryPort.onMessage.addListener(function(command)
         {
-            console.log("belfry incoming", data);
+            console.log("belfry incoming", command);
+            handleExternalCommand(command)
         });
 
         lynkUI.belfryPort.onDisconnect.addListener(function()
@@ -363,6 +364,11 @@ window.addEventListener("load", function()
             lynkUI.belfryPort = null;
         });
     }    
+    
+    chrome.runtime.onSuspend.addListener(function()
+    {
+        console.log("onSuspend");
+    });
 
     chrome.runtime.onMessageExternal.addListener(function(request, sender, sendResponse)
     {
@@ -488,11 +494,16 @@ window.addEventListener("load", function()
 
 window.addEventListener("beforeunload", function ()
 {
+    console.log("beforeunload");
     if (lynkUI.window) chrome.windows.remove(lynkUI.window.id);
     etherlynk.logoff();
+    
+    //if (lynkUI.belfryPort) lynkUI.belfryPort.postMessage("exit");
 });
 
 window.addEventListener("unload", function ()
 {
+    console.log("unload");
     etherlynk.logoff();
+    //if (lynkUI.belfryPort) lynkUI.belfryPort.postMessage("exit");    
 });

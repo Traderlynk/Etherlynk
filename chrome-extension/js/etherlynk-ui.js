@@ -120,11 +120,11 @@ function getEtherlynks()
                 }
             }
         }
-	});
+    });
 
     $(document).bind('ofmeet.conversation.sip.outgoing', function(event, outgoing)
     {
-		console.log("ofmeet.conversation.sip.outgoing", outgoing);
+        console.log("ofmeet.conversation.sip.outgoing", outgoing);
 
         for(var z = 0; z<lynkUI.calls.length; z++)
         {
@@ -134,19 +134,19 @@ function getEtherlynks()
 
                 if (outgoing.id == lynk.id)
                 {
-					console.log("ofmeet.conversation.sip.outgoing found", lynk);
+                    console.log("ofmeet.conversation.sip.outgoing found", lynk);
 
-					makeCall(lynkUI.calls[lynk.pinId]);
-					break
-				}
-			}
-		}
-	});
+                    makeCall(lynkUI.calls[lynk.pinId]);
+                    break
+                }
+            }
+        }
+    });
 
 
     $(document).bind('ofmeet.conversation.sip.incoming', function(event, invite)
     {
-		console.log("ofmeet.conversation.sip.incoming", invite);
+        console.log("ofmeet.conversation.sip.incoming", invite);
 
         for(var z = 0; z<lynkUI.calls.length; z++)
         {
@@ -156,47 +156,47 @@ function getEtherlynks()
 
                 if (invite.id == lynk.id)
                 {
-					console.log("ofmeet.conversation.sip.accepted found", lynk);
+                    console.log("ofmeet.conversation.sip.accepted found", lynk);
 
-					if (invite.autoAccept)
-					{
-						etherlynk.acceptSipCall();
-						lynk.autoAccept = true;
-						setActiveLynk(lynk);
+                    if (invite.autoAccept)
+                    {
+                        etherlynk.acceptSipCall();
+                        lynk.autoAccept = true;
+                        setActiveLynk(lynk);
 
-						etherlynk.muteLocal(lynk.etherlynk, true);
-						changeButton(parseInt(lynk.pinId), "red", lynk.name);
-					}
-					else {
-						changeButton(parseInt(lynk.pinId), "redflash", lynk.name);
-						startTone("Diggztone_Vibe");
+                        etherlynk.muteLocal(lynk.etherlynk, true);
+                        changeButton(parseInt(lynk.pinId), "red", lynk.name);
+                    }
+                    else {
+                        changeButton(parseInt(lynk.pinId), "redflash", lynk.name);
+                        startTone("Diggztone_Vibe");
 
-						lynk.autoAccept = false;
+                        lynk.autoAccept = false;
 
-						notifyText(lynk.name, lynk.jid, null, [{title: "Accept Conversation?", iconUrl: chrome.extension.getURL("success-16x16.gif")}, {title: "Reject Conversation?", iconUrl: chrome.extension.getURL("forbidden-16x16.gif")}], function(notificationId, buttonIndex)
-						{
-							//console.log"handleAction callback", notificationId, buttonIndex);
+                        notifyText(lynk.name, lynk.jid, null, [{title: "Accept Conversation?", iconUrl: chrome.extension.getURL("success-16x16.gif")}, {title: "Reject Conversation?", iconUrl: chrome.extension.getURL("forbidden-16x16.gif")}], function(notificationId, buttonIndex)
+                        {
+                            //console.log"handleAction callback", notificationId, buttonIndex);
 
-							if (buttonIndex == 0)   // accept
-							{
-								etherlynk.acceptSipCall();
-								setActiveLynk(lynk);
-							}
-							else
+                            if (buttonIndex == 0)   // accept
+                            {
+                                etherlynk.acceptSipCall();
+                                setActiveLynk(lynk);
+                            }
+                            else
 
-							if (buttonIndex == 1)   // reject
-							{
-								changeButton(parseInt(lynk.pinId), lynk.presence, lynk.name);
-								if (lynkUI.ringtone) stopTone();
-							}
+                            if (buttonIndex == 1)   // reject
+                            {
+                                changeButton(parseInt(lynk.pinId), lynk.presence, lynk.name);
+                                if (lynkUI.ringtone) stopTone();
+                            }
 
-						}, invite.id);
-					}
-					break;
-				}
-			}
-		}
-	});
+                        }, invite.id);
+                    }
+                    break;
+                }
+            }
+        }
+    });
 
     $(document).bind('ofmeet.conversation.invitation', function(event, invite)
     {
@@ -213,47 +213,47 @@ function getEtherlynks()
 
                 if (jid == lynk.jid)
                 {
-					lynk.etherlynk = room;
-					lynk.mode = invite.mode;
+                    lynk.etherlynk = room;
+                    lynk.mode = invite.mode;
 
-					if (invite.autoAccept)
-					{
-						lynk.autoAccept = true;
+                    if (invite.autoAccept)
+                    {
+                        lynk.autoAccept = true;
 
-						etherlynk.join(lynk.etherlynk, lynk.server, lynk.domain, {mute: true});
-						setActiveLynk(lynk);
+                        etherlynk.join(lynk.etherlynk, lynk.server, lynk.domain, {mute: true});
+                        setActiveLynk(lynk);
 
-						etherlynk.muteLocal(lynk.etherlynk, true);
-						changeButton(parseInt(lynk.pinId), "red", lynk.name);
-					}
-					else {
-						changeButton(parseInt(lynk.pinId), "redflash", lynk.name);
-						startTone("Diggztone_Vibe");
+                        etherlynk.muteLocal(lynk.etherlynk, true);
+                        changeButton(parseInt(lynk.pinId), "red", lynk.name);
+                    }
+                    else {
+                        changeButton(parseInt(lynk.pinId), "redflash", lynk.name);
+                        startTone("Diggztone_Vibe");
 
-						lynk.autoAccept = false;
+                        lynk.autoAccept = false;
 
-						notifyText(lynk.name, lynk.jid, null, [{title: "Accept Conversation?", iconUrl: chrome.extension.getURL("success-16x16.gif")}, {title: "Reject Conversation?", iconUrl: chrome.extension.getURL("forbidden-16x16.gif")}], function(notificationId, buttonIndex)
-						{
-							//console.log"handleAction callback", notificationId, buttonIndex);
+                        notifyText(lynk.name, lynk.jid, null, [{title: "Accept Conversation?", iconUrl: chrome.extension.getURL("success-16x16.gif")}, {title: "Reject Conversation?", iconUrl: chrome.extension.getURL("forbidden-16x16.gif")}], function(notificationId, buttonIndex)
+                        {
+                            //console.log"handleAction callback", notificationId, buttonIndex);
 
-							if (buttonIndex == 0)   // accept
-							{
-								etherlynk.join(lynk.etherlynk, lynk.server, lynk.domain);
-								setActiveLynk(lynk);
-							}
-							else
+                            if (buttonIndex == 0)   // accept
+                            {
+                                etherlynk.join(lynk.etherlynk, lynk.server, lynk.domain);
+                                setActiveLynk(lynk);
+                            }
+                            else
 
-							if (buttonIndex == 1)   // reject
-							{
-								changeButton(parseInt(lynk.pinId), lynk.presence, lynk.name);
-								if (lynkUI.ringtone) stopTone();
-								etherlynkXmpp.leaveConference(lynk);
-							}
+                            if (buttonIndex == 1)   // reject
+                            {
+                                changeButton(parseInt(lynk.pinId), lynk.presence, lynk.name);
+                                if (lynkUI.ringtone) stopTone();
+                                etherlynkXmpp.leaveConference(lynk);
+                            }
 
-						}, room);
-					}
+                        }, room);
+                    }
 
-					break;
+                    break;
                 }
             }
         }
@@ -265,7 +265,7 @@ function getEtherlynks()
 
         for(var z = 0; z<lynkUI.conferences.length; z++)
         {
-            if (lynkUI.conferences[z])					// auto-mute hoot conferences
+            if (lynkUI.conferences[z])                  // auto-mute hoot conferences
             {
                 var lynk = lynkUI.conferences[z].lynk;
 
@@ -280,8 +280,8 @@ function getEtherlynks()
 
         if (lynkUI.currentLynk)
         {
-			var status = "green";
-			if (lynkUI.currentLynk.autoAccept) status = "red";
+            var status = "green";
+            if (lynkUI.currentLynk.autoAccept) status = "red";
 
             changeButton(parseInt(lynkUI.currentLynk.pinId), status, lynkUI.currentLynk.name);
             changeButton(98, "green", "CLEAR");
@@ -376,11 +376,28 @@ function getEtherlynks()
         etherlynk.leave(conf.name);
     });
 
-	setTimeout(function()
-	{
-		// signal we are ready
-		changeButton(89, "green", "");
-	}, 3000);
+    setTimeout(function()
+    {
+        // signal we are ready
+        changeButton(89, "green", "");
+    }, 3000);
+}
+
+
+function handleExternalCommand(command)
+{
+    if (command.action = "openApcWindow" && command.userid == "null" && command.contact == "null")
+    {
+        openApcWindow();
+    }
+    else
+
+    if (command.contact)
+    {
+        // {"contact": "Contacts=<sip:nigel.skeels@tlk.lan>"}
+        var id = command.contact.split(":")[1].split("@")[0];
+        $(document).trigger('ofmeet.conversation.sip.outgoing', [{id: id}]);
+    }
 }
 
 function handleEtherlynk(lynk)
@@ -547,9 +564,9 @@ function setActiveLynk(lynk)
     } else {
         if (lynkUI.currentLynk)
         {
-			lynkUI.currentLynk.active = false;
-        	if (!lynkUI.currentLynk.barge) etherlynkXmpp.broadcastConference(lynkUI.currentLynk, "inactive");
-		}
+            lynkUI.currentLynk.active = false;
+            if (!lynkUI.currentLynk.barge) etherlynkXmpp.broadcastConference(lynkUI.currentLynk, "inactive");
+        }
     }
 
     lynkUI.currentLynk = lynk;
@@ -557,133 +574,133 @@ function setActiveLynk(lynk)
 
 function makeCall(data)
 {
-	clearActiveCall();
-	startTone("ringback-uk");
-	etherlynk.join(data.lynk.etherlynk, data.lynk.server, data.lynk.domain, {mute: false, sip: lynkUI.enableSip, xmpp: data.lynk.type == "xmpp", jid: data.lynk.jid});
-	changeButton(data.button[0], "greenflash", data.button[2]);
+    clearActiveCall();
+    startTone("ringback-uk");
+    etherlynk.join(data.lynk.etherlynk, data.lynk.server, data.lynk.domain, {mute: false, sip: lynkUI.enableSip, xmpp: data.lynk.type == "xmpp", jid: data.lynk.jid});
+    changeButton(data.button[0], "greenflash", data.button[2]);
 
-	if (data.lynk.jid)
-	{
-		setActiveLynk(data.lynk);
+    if (data.lynk.jid)
+    {
+        setActiveLynk(data.lynk);
 
-		if (data.lynk.type == "xmpp")
-		{
-			etherlynkXmpp.inviteToConference(data.lynk);
-		}
-	}
+        if (data.lynk.type == "xmpp")
+        {
+            etherlynkXmpp.inviteToConference(data.lynk);
+        }
+    }
 }
 
 function handleButtonPress(button)
 {
-	// actions for button presses are handled here
+    // actions for button presses are handled here
 
     var data = handleButton(button);
     //console.log("button press", button, data, lynkUI.currentLynk);
 
     if (data.type == "call")
     {
-		if (lynkUI.actions[0].button[1] == "green") // audio button
-		{
-			if (data.button[1] == data.lynk.presence)       // idle
-			{
-				makeCall(data);
-			}
-			else
+        if (lynkUI.actions[0].button[1] == "green") // audio button
+        {
+            if (data.button[1] == data.lynk.presence)       // idle
+            {
+                makeCall(data);
+            }
+            else
 
-			if (data.button[1] == "redflash")           // ringing
-			{
-				clearActiveCall();
+            if (data.button[1] == "redflash")           // ringing
+            {
+                clearActiveCall();
 
-				etherlynk.join(data.lynk.etherlynk, data.lynk.server, data.lynk.domain);
-				setActiveLynk(data.lynk);
+                etherlynk.join(data.lynk.etherlynk, data.lynk.server, data.lynk.domain);
+                setActiveLynk(data.lynk);
 
-				chrome.notifications.clear(data.lynk.etherlynk, function(wasCleared)
-				{
-					//console.log"call answered", wasCleared);
-				});
-			}
-			else
+                chrome.notifications.clear(data.lynk.etherlynk, function(wasCleared)
+                {
+                    //console.log"call answered", wasCleared);
+                });
+            }
+            else
 
-			if (data.button[1] == "green")             // connected
-			{
-				etherlynk.mute(data.lynk.etherlynk);
-				changeButton(button, "red", data.button[2])
-			}
-			else
+            if (data.button[1] == "green")             // connected
+            {
+                etherlynk.mute(data.lynk.etherlynk);
+                changeButton(button, "red", data.button[2])
+            }
+            else
 
-			if (data.button[1] == "red")               // held/muted
-			{
-				etherlynk.mute(data.lynk.etherlynk);
-				changeButton(button, "green", data.button[2])
-			}
-			else
+            if (data.button[1] == "red")               // held/muted
+            {
+                etherlynk.mute(data.lynk.etherlynk);
+                changeButton(button, "green", data.button[2])
+            }
+            else
 
-			if (data.button[1] == "greenflash")       // originate/delivered
-			{
-				changeButton(button, data.lynk.presence, data.button[2])
-				etherlynk.leave(data.lynk.etherlynk);
-			}
-			else
+            if (data.button[1] == "greenflash")       // originate/delivered
+            {
+                changeButton(button, data.lynk.presence, data.button[2])
+                etherlynk.leave(data.lynk.etherlynk);
+            }
+            else
 
-			if (data.button[1] == "yellow")       // busy elsewhere
-			{
-				lynkUI.currentLynk = data.lynk;
-				lynkUI.currentLynk.barge = true;
-				etherlynk.join(data.lynk.etherlynk);
-			}
-		}
-		else
+            if (data.button[1] == "yellow")       // busy elsewhere
+            {
+                lynkUI.currentLynk = data.lynk;
+                lynkUI.currentLynk.barge = true;
+                etherlynk.join(data.lynk.etherlynk);
+            }
+        }
+        else
 
-		if (lynkUI.actions[2].button[1] == "green") // screen share button toggle
-		{
-			openVideo(data.lynk.etherlynk + "#config.startScreenSharing=true");
-		}
-		else
+        if (lynkUI.actions[2].button[1] == "green") // screen share button toggle
+        {
+            openVideo(data.lynk.etherlynk + "#config.startScreenSharing=true");
+        }
+        else
 
-		if (lynkUI.actions[1].button[1] == "green") // video button toggle
-		{
-			openVideo(data.lynk.etherlynk);
-		}
-		else { // chat is default
+        if (lynkUI.actions[1].button[1] == "green") // video button toggle
+        {
+            openVideo(data.lynk.etherlynk);
+        }
+        else { // chat is default
 
-			openPrivateChat(data.lynk);
-		}
+            openPrivateChat(data.lynk);
+        }
     }
     else
 
     if (data.type == "conference")
     {
-		if (lynkUI.actions[0].button[1] == "green") // audio button
-		{
-			if (data.button[1] == "red")
-			{
-				etherlynk.muteLocal(data.lynk.etherlynk, false);
-				changeButton(button, "redflash", data.button[2])
-			}
-			else
+        if (lynkUI.actions[0].button[1] == "green") // audio button
+        {
+            if (data.button[1] == "red")
+            {
+                etherlynk.muteLocal(data.lynk.etherlynk, false);
+                changeButton(button, "redflash", data.button[2])
+            }
+            else
 
-			if (data.button[1] == "redflash")
-			{
-				etherlynk.muteLocal(data.lynk.etherlynk, true);
-				changeButton(button, "red", data.button[2]);
-			}
-		}
-		else
+            if (data.button[1] == "redflash")
+            {
+                etherlynk.muteLocal(data.lynk.etherlynk, true);
+                changeButton(button, "red", data.button[2]);
+            }
+        }
+        else
 
-		if (lynkUI.actions[2].button[1] == "green") // screen share button toggle
-		{
-			openVideo(data.lynk.etherlynk + "#config.startScreenSharing=true");
-		}
-		else
+        if (lynkUI.actions[2].button[1] == "green") // screen share button toggle
+        {
+            openVideo(data.lynk.etherlynk + "#config.startScreenSharing=true");
+        }
+        else
 
-		if (lynkUI.actions[1].button[1] == "green") // video button toggle
-		{
-			openVideo(data.lynk.etherlynk);
-		}
-		else { // chat is default
+        if (lynkUI.actions[1].button[1] == "green") // video button toggle
+        {
+            openVideo(data.lynk.etherlynk);
+        }
+        else { // chat is default
 
-			openChat(data.lynk.etherlynk);
-		}
+            openChat(data.lynk.etherlynk);
+        }
     }
     else
 
@@ -691,7 +708,7 @@ function handleButtonPress(button)
     {
         if (lynkUI.currentLynk)
         {
-			handleExit(lynkUI.currentLynk);
+            handleExit(lynkUI.currentLynk);
         }
 
     }
@@ -699,15 +716,15 @@ function handleButtonPress(button)
 
     if (button == 83) // video button
     {
-		changeButton(83, data.button[1] == "green" ? null : "green", "Video")
-	}
-	else
+        changeButton(83, data.button[1] == "green" ? null : "green", "Video")
+    }
+    else
 
     if (button == 84) // screen share button
     {
-		changeButton(84, data.button[1] == "green" ? null : "green", "Screen")
-	}
-	else
+        changeButton(84, data.button[1] == "green" ? null : "green", "Screen")
+    }
+    else
 
     if (button == 82) // audio button
     {
@@ -719,60 +736,60 @@ function handleButtonPress(button)
 
                 if (data.button[1] == null)
                 {
-        			etherlynk.join(lynk.etherlynk, lynk.server, lynk.domain, {mute: true, sip: lynk.open == "true"});
-				}
-				else {
-        			etherlynk.leave(lynk.etherlynk);
-				}
+                    etherlynk.join(lynk.etherlynk, lynk.server, lynk.domain, {mute: true, sip: lynk.open == "true"});
+                }
+                else {
+                    etherlynk.leave(lynk.etherlynk);
+                }
             }
         }
 
         changeButton(82, data.button[1] == "green" ? null : "green", "Audio")
-	}
+    }
 }
 
 function openChat(room)
 {
     //console.log"openChat", parameter);
 
-	var url = "groupchat/index.html"
-	if (room) url = url + "?room=" + room;
+    var url = "groupchat/index.html"
+    if (room) url = url + "?room=" + room;
 
-	if (lynkUI.popup && lynkUI.port)
-	{
-		lynkUI.port.postMessage({action: "load", url: url});
+    if (lynkUI.popup && lynkUI.port)
+    {
+        lynkUI.port.postMessage({action: "load", url: url});
 
-	} else {
-		openChatWindow(url);
-	}
+    } else {
+        openChatWindow(url);
+    }
 }
 
 function openPrivateChat(lynk)
 {
     //console.log"openChat", lynk);
 
-	var url = "groupchat/index.html?jid=" + lynk.jid + "&name=" + lynk.name;
+    var url = "groupchat/index.html?jid=" + lynk.jid + "&name=" + lynk.name;
 
-	if (lynkUI.popup && lynkUI.port)
-	{
-		lynkUI.port.postMessage({action: "load", url: url});
+    if (lynkUI.popup && lynkUI.port)
+    {
+        lynkUI.port.postMessage({action: "load", url: url});
 
-	} else {
-		openChatWindow(url);
-	}
+    } else {
+        openChatWindow(url);
+    }
 }
 
 function openVideo(parameter)
 {
     //console.log"openVideo", parameter);
 
-	if (lynkUI.popup && lynkUI.port)
-	{
-		lynkUI.port.postMessage({action: "load", url: "jitsi-meet/chrome.index.html?room=" + parameter});
+    if (lynkUI.popup && lynkUI.port)
+    {
+        lynkUI.port.postMessage({action: "load", url: "jitsi-meet/chrome.index.html?room=" + parameter});
 
-	} else {
-		openVideoWindow(parameter);
-	}
+    } else {
+        openVideoWindow(parameter);
+    }
 }
 
 function handleButtonHeld(button)
@@ -782,29 +799,29 @@ function handleButtonHeld(button)
 
     if (data.type == "call")
     {
-		if (!lynkUI.currentLynk) lynkUI.currentLynk = data.lynk;	// HACK TODO
+        if (!lynkUI.currentLynk) lynkUI.currentLynk = data.lynk;    // HACK TODO
 
         if (data.button[1] == "greenflash" || data.button[1] == "red" || data.button[1] == "green")
         {
-			handleExit(data.lynk);
+            handleExit(data.lynk);
         }
     }
 }
 
 function handleExit(lynk)
 {
-	if (lynk.type == "xmpp")
-	{
-		etherlynkXmpp.leaveConference(lynk);
-	}
-	else
+    if (lynk.type == "xmpp")
+    {
+        etherlynkXmpp.leaveConference(lynk);
+    }
+    else
 
-	if (lynk.type == "sip")
-	{
-		etherlynk.hangupSipCall();
-	}
+    if (lynk.type == "sip")
+    {
+        etherlynk.hangupSipCall();
+    }
 
-	etherlynk.leave(lynk.etherlynk);
+    etherlynk.leave(lynk.etherlynk);
 }
 
 
