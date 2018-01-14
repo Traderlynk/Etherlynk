@@ -326,13 +326,18 @@ function handleButtonState(message)
 
                     etherlynkobj.setbutton([call.index, color, call.label]);
                 }
-                else
 
-                if (call.state == "accepted")
+                if (call.page != 0 && bgWindow.pade.sip.authUsername == message.source)  // handset only
                 {
-                    if (bgWindow.pade.sip.authUsername == message.source)  // me
+                    if (message.event == "etherlynk.event.sip.join")
                     {
                         bgWindow.notifyAcceptedSipCall("Active Call", call.label, call.value);
+                    }
+                    else
+
+                    if (message.event == "etherlynk.event.sip.leave")
+                    {
+                        bgWindow.clearNotification(call.value);
                     }
                 }
 

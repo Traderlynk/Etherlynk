@@ -147,6 +147,12 @@ window.addEventListener("load", function()
             if (win == pade.videoWindow.id) pade.minimised = false;
         }
 
+        if (pade.apcWindow)
+        {
+            if (win == -1) pade.minimised = true;
+            if (win == pade.apcWindow.id) pade.minimised = false;
+        }
+
         //console.log("minimised", pade.minimised);
     });
 
@@ -168,6 +174,7 @@ window.addEventListener("load", function()
         if (pade.apcWindow && win == pade.apcWindow.id)
         {
             pade.apcWindow = null;
+            pade.minimised = false;
         }
 
         if (pade.blogWindow && win == pade.blogWindow.id)
@@ -1292,14 +1299,17 @@ function joinAudioCall(title, label, room)
     etherlynk.join(room);
     sendToJabra("offhook");
 
-    notifyText(title, label, null, [{title: "Clear Conversation?", iconUrl: chrome.extension.getURL("success-16x16.gif")}], function(notificationId, buttonIndex)
+    if (pade.minimised)
     {
-        if (buttonIndex == 0)   // terminate
+        notifyText(title, label, null, [{title: "Clear Conversation?", iconUrl: chrome.extension.getURL("success-16x16.gif")}], function(notificationId, buttonIndex)
         {
-            etherlynk.leave(room);
-        }
+            if (buttonIndex == 0)   // terminate
+            {
+                etherlynk.leave(room);
+            }
 
-    }, room);
+        }, room);
+    }
 }
 
 function notifyAcceptedSipCall(title, label, number)
@@ -1307,14 +1317,17 @@ function notifyAcceptedSipCall(title, label, number)
     // TODO
     //sendToJabra("offhook");
 
-    notifyText(title, label, null, [{title: "Hangup?", iconUrl: chrome.extension.getURL("success-16x16.gif")}], function(notificationId, buttonIndex)
+    if (pade.minimised)
     {
-        if (buttonIndex == 0)   // terminate
+        notifyText(title, label, null, [{title: "Hangup?", iconUrl: chrome.extension.getURL("success-16x16.gif")}], function(notificationId, buttonIndex)
         {
-            etherlynk.hangup(number);
-        }
+            if (buttonIndex == 0)   // terminate
+            {
+                etherlynk.hangup(number);
+            }
 
-    }, number);
+        }, number);
+    }
 }
 
 function notifyIncomingSipCall(title, label, number)
@@ -1379,7 +1392,7 @@ function addSoftTurretMenu()
 {
     if (getSetting("enableST", false))
     {
-        chrome.contextMenus.create({id: "pade_apc", type: "normal", title: "Soft Turret", contexts: ["browser_action"],  onclick: function()
+        chrome.contextMenus.create({id: "pade_apc", type: "normal", title: "Communicator", contexts: ["browser_action"],  onclick: function()
         {
             openApcWindow();
         }});
