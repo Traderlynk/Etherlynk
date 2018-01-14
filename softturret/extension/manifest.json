@@ -1,0 +1,82 @@
+{
+  "manifest_version": 2,
+  "minimum_chrome_version": "34",  
+  "options_page": "options/index.html",  
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' 'unsafe-inline' data: http: https:",  
+  "short_name": "etherlynk-st",
+  "name": "Etherlynk ST",
+  "description": "De-centralized Communications for Enterprise Ethereum",
+  "version": "0.1.17",
+    
+  "background": {
+        "persistent": true,
+        "scripts": [ 
+            "js/jquery.min.js", "js/libs.bundle.js", "js/strophe.reconnect.js", "js/moment.js", "js/sip.js", "js/etherlynk.js", "js/background.js"
+        ]
+  }, 
+
+   "content_scripts": [ {
+      "all_frames": true,
+      "css": [ "cursor.css" ],
+      "js": [ "js/content.js", "js/jquery.min.js", "js/util.js", "js/ofmeet.js", "js/tinycolor.js" ],
+      "matches": [ "https://*/*", "http://*/*", "<all_urls>" ]
+   } ],
+   
+  "browser_action": {
+      "default_icon": {
+         "19": "tl_icon.png",
+         "38": "tl_icon.png"
+      }   
+  },
+
+   "icons": {
+      "128": "tl_icon.png",
+      "16": "tl_icon.png",
+      "48": "tl_icon.png"
+   }, 
+  
+  "web_accessible_resources": [
+    "*",   
+    "options/*",
+    "js/*",    
+    "pdf/*",     
+    "ringtones/*",       
+    "jitsi-meet/*",     
+    "groupchat/*"
+  ],
+  
+  "permissions": [
+    "background", 
+    "contextMenus", 
+    "desktopCapture",
+    "nativeMessaging",
+    "storage",
+    "tabs",
+    "idle", 
+    "notifications", 
+    "http://*/*", 
+    "https://*/*" 
+  ],
+  
+  "commands": {
+    "_execute_browser_action": {
+      "description": "Open Etherlynk ST",     
+      "suggested_key": {
+        "default": "Ctrl+M",
+        "mac": "MacCtrl+M"
+      }
+    }
+  },
+  "externally_connectable": {
+      "matches": [
+          "*://desktop-545pc5b/*", 
+          "*://btg199251/*", 
+          "*://wtlkd001/*", 
+          "*://tllt0001/*",          
+          "*://xmpp.igniterealtime.org/*", 
+          "*://etherlynk.4ng.net/*",           
+          "*://traderlynk.4ng.net/*",
+          "*://traderlynk.net/*"          
+      ]
+  }  
+}
