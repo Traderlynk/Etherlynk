@@ -1336,7 +1336,7 @@ function notifyIncomingSipCall(title, label, number)
     {
         if (buttonIndex == 0)   // accept
         {
-            etherlynk.dial(number);
+            etherlynk.dial(number, {});
         }
         else
 

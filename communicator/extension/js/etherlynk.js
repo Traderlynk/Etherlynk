@@ -200,7 +200,7 @@ var etherlynk = (function(lynk)
                     console.log("Etherlynk recognition started ok");
                 }
 
-                if (pade.enableSip) dial(name);
+                if (pade.enableSip) dial(name, {extraHeaders: [ 'X-ofmeet-userid: ' + pade.username, 'X-ofmeet-room: ' + name ]});
 
                 return;
             }
@@ -646,9 +646,9 @@ var etherlynk = (function(lynk)
         }
     }
 
-    function dial(name)
+    function dial(name, options)
     {
-        console.log("dial", name);
+        console.log("dial", name, options);
 
         var setupRemoteAudio = function(name)
         {
@@ -685,7 +685,7 @@ var etherlynk = (function(lynk)
                         constraints : { audio : true, video : false },
                         render      : { remote : setupRemoteAudio(name)},
                     },
-                    extraHeaders: [ 'X-ofmeet-userid: ' + pade.username, 'X-ofmeet-room: ' + name ]
+                    extraHeaders: options.extraHeaders
                 });
 
                 lynk.sip.sessions[name].direction = 'outgoing';
@@ -796,9 +796,9 @@ var etherlynk = (function(lynk)
     // SIP
 
 
-    lynk.dial = function(destination)
+    lynk.dial = function(destination, options)
     {
-        dial(destination);
+        dial(destination, options);
     }
 
     lynk.accept = function(name)

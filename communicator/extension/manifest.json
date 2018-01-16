@@ -6,7 +6,7 @@
   "short_name": "etherlynk",
   "name": "Etherlynk Communicator",
   "description": "De-centralized Communications for Enterprise Ethereum",
-  "version": "0.2.0",
+  "version": "0.2.1",
     
   "background": {
         "persistent": true,
