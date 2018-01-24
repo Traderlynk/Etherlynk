@@ -1,5 +1,5 @@
 this.manifest = {
-    "name": "Etherlynk TS",
+    "name": "Communicator",
     "icon": "../tl_icon.png",
     "settings": [
         {
