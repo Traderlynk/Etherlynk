@@ -1,6 +1,65 @@
 var pade = {}
 var callbacks = {}
 
+// strophe SASL
+
+if (getSetting("useClientCert", false))
+{
+    console.log("useClientCert enabled");
+
+    Strophe.addConnectionPlugin('externalsasl',
+    {
+        init: function (connection)
+        {
+            Strophe.SASLExternal = function() {};
+            Strophe.SASLExternal.prototype = new Strophe.SASLMechanism("EXTERNAL", true, 2000);
+
+            Strophe.SASLExternal.test = function (connection)
+            {
+                return connection.authcid !== null;
+            };
+
+            Strophe.SASLExternal.prototype.onChallenge = function(connection)
+            {
+                return connection.authcid === connection.authzid ? '' : connection.authzid;
+            };
+
+            connection.mechanisms[Strophe.SASLExternal.prototype.name] = Strophe.SASLExternal;
+            console.log("strophe plugin: externalsasl enabled");
+        }
+    });
+}
+
+if (getSetting("useTotp", false))
+{
+    console.log("useTotp enabled");
+
+    Strophe.addConnectionPlugin('ofchatsasl',
+    {
+        init: function (connection)
+        {
+            Strophe.SASLOFChat = function () { };
+            Strophe.SASLOFChat.prototype = new Strophe.SASLMechanism("OFCHAT", true, 2000);
+
+            Strophe.SASLOFChat.test = function (connection)
+            {
+                return getSetting("password", null) !== null;
+            };
+
+            Strophe.SASLOFChat.prototype.onChallenge = function (connection)
+            {
+                var token = getSetting("username", null) + ":" + getSetting("password", null);
+                console.log("Strophe.SASLOFChat", token);
+                return token;
+            };
+
+            connection.mechanisms[Strophe.SASLOFChat.prototype.name] = Strophe.SASLOFChat;
+            console.log("strophe plugin: ofchatsasl enabled");
+        }
+    });
+}
+
+
 window.addEventListener("beforeunload", function ()
 {
 
@@ -22,6 +81,13 @@ window.addEventListener("unload", function ()
 
 window.addEventListener("load", function()
 {
+    chrome.runtime.onInstalled.addListener(function(details)
+    {
+        //doExtensionPage("changelog.html");
+
+    });
+
+
     // support Jitsi domain controlled screen share
 
     chrome.runtime.onMessageExternal.addListener(function(request, sender, sendResponse)
@@ -53,22 +119,60 @@ window.addEventListener("load", function()
         }
     });
 
-    // only single instance of ST supported in pop connection
+    // support ofmeet 0.3.x any domain screen share
 
     chrome.runtime.onConnect.addListener(function(port)
     {
-        //console.log("popup connect");
+        console.log("popup connect");
         pade.popup = true;
         pade.port = port;
 
         port.onMessage.addListener(function(message)
         {
+            if (message.action == "pade.invite.contact")
+            {
+                inviteToConference(pade.activeContact.jid, pade.activeContact.room);
+            }
+            else
 
+            if (message.event == "pade.popup.open")
+            {
+                stopTone();
+            }
+            else {  // desktop share backward compatiblity for openfire meetings 0.3.x
+
+                switch(message.type)
+                {
+                case 'ofmeetGetScreen':
+                    //server = message.server;
+                    //sendRemoteControl('action=' + message.type + '&resource=' + message.resource + '&server=' + message.server)
+
+                    var pending = chrome.desktopCapture.chooseDesktopMedia(message.options || ['screen', 'window'], port.sender.tab, function (streamid)
+                    {
+                        message.type = 'ofmeetGotScreen';
+                        message.sourceId = streamid;
+                        port.postMessage(message);
+                    });
+
+                    // Let the app know that it can cancel the timeout
+                    message.type = 'ofmeetGetScreenPending';
+                    message.request = pending;
+                    port.postMessage(message);
+                    break;
+
+                case 'ofmeetCancelGetScreen':
+                    chrome.desktopCapture.cancelChooseDesktopMedia(message.request);
+                    message.type = 'ofmeetCanceledGetScreen';
+                    port.postMessage(message);
+                    break;
+                }
+
+            }
         });
 
         port.onDisconnect.addListener(function()
         {
-            //console.log("popup disconnect");
+            console.log("popup disconnect");
             pade.popup = false;
             pade.port = null;
         });
@@ -86,10 +190,12 @@ window.addEventListener("load", function()
     chrome.contextMenus.removeAll();
     chrome.contextMenus.create({id: "pade_rooms", title: "Meetings", contexts: ["browser_action"]});
     chrome.contextMenus.create({id: "pade_conversations", title: "Conversations", contexts: ["browser_action"]});
+    chrome.contextMenus.create({id: "pade_applications", title: "Applications", contexts: ["browser_action"]});
 
     addChatMenu();
+    addInverseMenu();
     addBlogMenu();
-    addSoftTurretMenu();
+    addTouchPadMenu();
 
     chrome.notifications.onClosed.addListener(function(notificationId, byUser)
     {
@@ -116,7 +222,7 @@ window.addEventListener("load", function()
 
     chrome.browserAction.onClicked.addListener(function()
     {
-        if (getSetting("enableST", false))
+        if (getSetting("enableTouchPad", false))
         {
             if (getSetting("popupWindow", false))
             {
@@ -131,6 +237,20 @@ window.addEventListener("load", function()
         }
     });
 
+    chrome.commands.onCommand.addListener(function(command)
+    {
+        console.log('Command:', command);
+
+        if (command == "activate_chat" && getSetting("enableInverse", false)) openChatWindow("inverse/index.html");
+        if (command == "activate_chat" && getSetting("enableChat", false)) openChatWindow("groupchat/index.html");
+
+        if (command == "activate_blogger_communicator" && getSetting("enableTouchPad", false)) openApcWindow();
+        if (command == "activate_blogger_communicator" && !getSetting("enableTouchPad", false)) openBlogWindow();
+
+        if (command == "activate_phone") openPhoneWindow(true)
+        if (command == "activate_meeting") openVideoWindow(pade.activeContact.room);
+
+    });
 
     chrome.windows.onFocusChanged.addListener(function(win)
     {
@@ -146,6 +266,7 @@ window.addEventListener("load", function()
             if (win == -1) pade.minimised = true;
             if (win == pade.videoWindow.id) pade.minimised = false;
         }
+        else
 
         if (pade.apcWindow)
         {
@@ -171,12 +292,6 @@ window.addEventListener("load", function()
             pade.sip.window = null;
         }
 
-        if (pade.apcWindow && win == pade.apcWindow.id)
-        {
-            pade.apcWindow = null;
-            pade.minimised = false;
-        }
-
         if (pade.blogWindow && win == pade.blogWindow.id)
         {
             pade.blogWindow = null;
@@ -190,12 +305,22 @@ window.addEventListener("load", function()
             pade.minimised = false;
             pade.connection.send($pres());  // needed because JitsiMeet send unavailable
         }
+
+        if (pade.apcWindow && win == pade.apcWindow.id)
+        {
+            pade.apcWindow = null;
+            pade.minimised = false;
+        }
     });
 
     pade.server = getSetting("server", null);
     pade.domain = getSetting("domain", null);
     pade.username = getSetting("username", null);
     pade.password = getSetting("password", null);
+
+    chrome.browserAction.setBadgeBackgroundColor({ color: '#ff0000' });
+    chrome.browserAction.setBadgeText({ text: 'off' });
+
 
     if (pade.server && pade.domain && pade.username && pade.password)
     {
@@ -240,13 +365,9 @@ window.addEventListener("load", function()
             }
         }
 
-        chrome.browserAction.setBadgeBackgroundColor({ color: '#ff0000' });
-        chrome.browserAction.setBadgeText({ text: 'off' });
-
         // setup SIP
         pade.sip = {};
         pade.enableSip = getSetting("enableSip", false);
-        pade.enableST = getSetting("enableST", false);
 
         var connUrl = "https://" + pade.server + "/http-bind/";
 
@@ -255,10 +376,12 @@ window.addEventListener("load", function()
             connUrl = "wss://" + pade.server + "/ws/";
         }
 
-        pade.connection = new Strophe.Connection(connUrl);
+        pade.connection = getConnection(connUrl);
 
-        pade.connection.connect(pade.username + "@" + pade.domain + "/" + pade.username, pade.password, function (status)
+        pade.connection.connect(pade.username + "@" + pade.domain + "/" + pade.username + "-" + Math.random().toString(36).substr(2,9), pade.password, function (status)
         {
+            console.log("pade.connection ===>", status);
+
             if (status === Strophe.Status.CONNECTED)
             {
                 addHandlers();
@@ -266,7 +389,7 @@ window.addEventListener("load", function()
                 chrome.browserAction.setBadgeText({ text: "" });
                 pade.connection.send($pres());
 
-                chrome.browserAction.setTitle({title: "Etherlynk Communicator - Connected"});
+                chrome.browserAction.setTitle({title: chrome.i18n.getMessage('manifest_shortExtensionName') + " - Connected"});
 
                 pade.presence = {};
                 pade.participants = {};
@@ -284,13 +407,24 @@ window.addEventListener("load", function()
             if (status === Strophe.Status.DISCONNECTED)
             {
                 chrome.browserAction.setBadgeText({ text: "off" });
-                chrome.browserAction.setTitle({title: "Etherlynk Communicator - Disconnected"});
+                chrome.browserAction.setTitle({title: chrome.i18n.getMessage('manifest_shortExtensionName') + " - Disconnected"});
+            }
+            else
+
+            if (status === Strophe.Status.AUTHFAIL)
+            {
+               doExtensionPage("options/index.html");
             }
 
         });
 
-    } else doOptions();
+    } else doExtensionPage("options/index.html");
 });
+
+function getConnection(connUrl)
+{
+    return new Strophe.Connection(connUrl);
+}
 
 function handleContact(contact)
 {
@@ -356,7 +490,7 @@ function handleContact(contact)
 function setActiveContact(contact)
 {
     pade.activeContact = contact;
-    chrome.browserAction.setTitle({title: "Etherlynk Communicator " + pade.activeContact.name + " (" + pade.activeContact.type + ")"});
+    chrome.browserAction.setTitle({title: chrome.i18n.getMessage('manifest_shortExtensionName') + " - " + pade.activeContact.name + " (" + pade.activeContact.type + ")"});
 }
 
 function setActiveWorkgroup(contact)
@@ -473,8 +607,8 @@ function notifyText(message, context, iconUrl, buttons, callback, notifyId)
 {
     var opt = {
       type: "basic",
-      title: "Etherlynk Communicator",
-      iconUrl: iconUrl ? iconUrl : chrome.extension.getURL("tl_icon.png"),
+      title: chrome.i18n.getMessage('manifest_extensionName'),
+      iconUrl: iconUrl ? iconUrl : chrome.extension.getURL("image.png"),
 
       message: message,
       buttons: buttons,
@@ -493,8 +627,8 @@ function notifyImage(message, context, imageUrl, buttons, callback)
 {
     var opt = {
       type: "image",
-      title: "Etherlynk Communicator",
-      iconUrl: chrome.extension.getURL("tl_icon.png"),
+      title: chrome.i18n.getMessage('manifest_extensionName'),
+      iconUrl: chrome.extension.getURL("image.png"),
 
       message: message,
       buttons: buttons,
@@ -513,8 +647,8 @@ function notifyProgress(message, context, progress, buttons, callback)
 {
     var opt = {
       type: "progress",
-      title: "Etherlynk Communicator",
-      iconUrl: chrome.extension.getURL("tl_icon.png"),
+      title: chrome.i18n.getMessage('manifest_extensionName'),
+      iconUrl: chrome.extension.getURL("image.png"),
 
       message: message,
       buttons: buttons,
@@ -534,8 +668,8 @@ function notifyList(message, context, items, buttons, callback)
 {
     var opt = {
       type: "list",
-      title: "Etherlynk Communicator",
-      iconUrl: chrome.extension.getURL("tl_icon.png"),
+      title: chrome.i18n.getMessage('manifest_extensionName'),
+      iconUrl: chrome.extension.getURL("image.png"),
 
       message: message,
       buttons: buttons,
@@ -575,7 +709,7 @@ function openApcWindow()
 
 function closePhoneWindow()
 {
-    if (pade.sip.window != null)
+    if (pade.sip && pade.sip.window != null)
     {
         chrome.windows.remove(pade.sip.window.id);
         pade.sip.window = null;
@@ -608,18 +742,20 @@ function closeChatWindow()
     }
 }
 
-function openChatWindow(url)
+function openChatWindow(url, update)
 {
-    if (!pade.chatWindow)
+    if (!pade.chatWindow || update)
     {
+        if (update && pade.chatWindow != null) chrome.windows.remove(pade.chatWindow.id);
+
         chrome.windows.create({url: chrome.extension.getURL(url), focused: true, type: "popup"}, function (win)
         {
             pade.chatWindow = win;
-            chrome.windows.update(pade.chatWindow.id, {drawAttention: true, width: 800, height: 600});
+            chrome.windows.update(pade.chatWindow.id, {drawAttention: true, width: 1024, height: 800});
         });
 
     } else {
-        chrome.windows.update(pade.chatWindow.id, {drawAttention: true, focused: true, width: 800, height: 600});
+        chrome.windows.update(pade.chatWindow.id, {drawAttention: true, focused: true, width: 1024, height: 800});
     }
 }
 
@@ -635,12 +771,17 @@ function closeVideoWindow()
 
 function openVideoWindow(room)
 {
+    var url = chrome.extension.getURL("jitsi-meet/chrome.index.html");
+    if (room) url = url + "?room=" + room;
+    openVideoWindowUrl(url);
+}
+
+function openVideoWindowUrl(url)
+{
     if (pade.videoWindow != null)
     {
         chrome.windows.remove(pade.videoWindow.id);
     }
-    var url = chrome.extension.getURL("jitsi-meet/chrome.index.html");
-    if (room) url = url + "?room=" + room;
 
     chrome.windows.create({url: url, width: 1024, height: 800, focused: true, type: "popup"}, function (win)
     {
@@ -677,11 +818,11 @@ function openBlogWindow()
     }
 }
 
-function doOptions()
+function doExtensionPage(url)
 {
     chrome.tabs.getAllInWindow(null, function(tabs)
     {
-        var setupUrl = chrome.extension.getURL('options/index.html');
+        var setupUrl = chrome.extension.getURL(url);
 
         if (tabs)
         {
@@ -787,7 +928,7 @@ function addHandlers()
         var room = null;
         var autoaccept = null;
 
-        //console.log("message handler", from, to, type)
+        console.log("message handler", from, to, type)
 
         $(message).find('body').each(function ()
         {
@@ -797,34 +938,13 @@ function addHandlers()
 
             offerer = Strophe.getBareJidFromJid(from);
 
-            //console.log("message handler body", body, offerer);
+            console.log("message handler body", body, offerer);
 
             if ( pos1 > -1 && pos2 > -1 )
             {
                 room = body.substring(pos1 + 8);
                 handleInvitation({room: room, offerer: offerer});
             }
-        });
-
-        $(message).find('ofmeet').each(function ()
-        {
-            try {
-                var json = JSON.parse($(this).text());
-                console.log("etherlynk.event.sip", json);
-
-                if (json.event == "etherlynk.event.sip.join")
-                {
-                    if (pade.port) pade.port.postMessage(json);
-                }
-                else
-
-                if (json.event == "etherlynk.event.sip.leave")
-                {
-                    if (pade.port) pade.port.postMessage(json);
-                }
-
-
-            } catch (e) {}
         });
 
         $(message).find('x').each(function ()
@@ -1016,7 +1136,9 @@ function fetchContacts(callback)
         console.warn("Fastpath not available");
     });
 
-    if (pade.enableSip || pade.enableST)
+    etherlynk.connect();
+
+    if (pade.enableSip)
     {
         pade.connection.sendIQ($iq({type: 'get', to: "sipark." + pade.connection.domain}).c('registration', {jid: pade.connection.jid, xmlns: "http://www.jivesoftware.com/protocol/sipark"}).tree(), function(resp)
         {
@@ -1031,22 +1153,20 @@ function fetchContacts(callback)
             $(resp).find('promptCredentials').each(function()   {pade.sip.promptCredentials = $(this).text();});
 
             console.log("get sip profile", pade.sip);
-            etherlynk.connect();
 
-            if (pade.enableSip)
+            if (pade.sip.authUsername)
             {
-                if (pade.sip.authUsername)
+                etherlynk.connectSIP();
+
+                chrome.contextMenus.create({parentId: "pade_applications", id: "pade_phone", type: "normal", title: "Phone", contexts: ["browser_action"],  onclick: function()
                 {
-                    chrome.contextMenus.create({id: "pade_phone", type: "normal", title: "Phone", contexts: ["browser_action"],  onclick: function()
-                    {
-                        openPhoneWindow(true);
-                    }});
-                }
+                    openPhoneWindow(true);
+                }});
             }
 
         }, function (error) {
             console.warn("SIP profile not available");
-            etherlynk.connect();
+            connectSIP();
         });
     }
 
@@ -1116,6 +1236,8 @@ function handleInvitation(invite)
     else {
         processInvitation("Unknown User", invite.offerer, invite.room);
     }
+
+    if (pade.port) pade.port.postMessage({event: "invited", id : invite.offerer, name: invite.room});
 }
 
 function processInvitation(title, label, room, autoaccept)
@@ -1126,7 +1248,7 @@ function processInvitation(title, label, room, autoaccept)
     {
         startTone("Diggztone_Vibe");
 
-        notifyText(title, label, null, [{title: "Accept Etherlynk?", iconUrl: chrome.extension.getURL("success-16x16.gif")}, {title: "Reject Etherlynk?", iconUrl: chrome.extension.getURL("forbidden-16x16.gif")}], function(notificationId, buttonIndex)
+        notifyText(title, label, null, [{title: "Accept " + chrome.i18n.getMessage('manifest_extensionName') + "?", iconUrl: chrome.extension.getURL("success-16x16.gif")}, {title: "Reject " + chrome.i18n.getMessage('manifest_extensionName') + "?", iconUrl: chrome.extension.getURL("forbidden-16x16.gif")}], function(notificationId, buttonIndex)
         {
             //console.log("handleAction callback", notificationId, buttonIndex);
 
@@ -1299,53 +1421,25 @@ function joinAudioCall(title, label, room)
     etherlynk.join(room);
     sendToJabra("offhook");
 
-    if (pade.minimised)
+    notifyText(title, label, null, [{title: "Clear Conversation?", iconUrl: chrome.extension.getURL("success-16x16.gif")}], function(notificationId, buttonIndex)
     {
-        notifyText(title, label, null, [{title: "Clear Conversation?", iconUrl: chrome.extension.getURL("success-16x16.gif")}], function(notificationId, buttonIndex)
+        if (buttonIndex == 0)   // terminate
         {
-            if (buttonIndex == 0)   // terminate
-            {
-                etherlynk.leave(room);
-            }
-
-        }, room);
-    }
-}
-
-function notifyAcceptedSipCall(title, label, number)
-{
-    // TODO
-    //sendToJabra("offhook");
-
-    if (pade.minimised)
-    {
-        notifyText(title, label, null, [{title: "Hangup?", iconUrl: chrome.extension.getURL("success-16x16.gif")}], function(notificationId, buttonIndex)
-        {
-            if (buttonIndex == 0)   // terminate
-            {
-                etherlynk.hangup(number);
-            }
-
-        }, number);
-    }
-}
-
-function notifyIncomingSipCall(title, label, number)
-{
-    notifyText(title, label, null, [{title: "Accept?", iconUrl: chrome.extension.getURL("success-16x16.gif")}, {title: "Reject?", iconUrl: chrome.extension.getURL("forbidden-16x16.gif")}], function(notificationId, buttonIndex)
-    {
-        if (buttonIndex == 0)   // accept
-        {
-            etherlynk.dial(number, {});
-        }
-        else
-
-        if (buttonIndex == 1)   // reject
-        {
-
+            etherlynk.leave(room);
         }
 
-    }, number);
+    }, room);
+}
+
+function removeSetting(name)
+{
+    localStorage.removeItem("store.settings." + name);
+}
+
+function setSetting(name, value)
+{
+    //console.log("setSetting", name, value);
+    window.localStorage["store.settings." + name] = JSON.stringify(value);
 }
 
 function getSetting(name, defaultValue)
@@ -1358,6 +1452,8 @@ function getSetting(name, defaultValue)
     {
         value = JSON.parse(window.localStorage["store.settings." + name]);
 
+        if (name == "password") value = getPassword(value);
+
     } else {
         if (defaultValue) window.localStorage["store.settings." + name] = JSON.stringify(defaultValue);
     }
@@ -1365,17 +1461,21 @@ function getSetting(name, defaultValue)
     return value;
 }
 
-function setSetting(name, value)
+function getPassword(password)
 {
-    //console.log("setSetting", name, value);
-    window.localStorage["store.settings." + name] = JSON.stringify(value);
+    if (!password || password == "") return null;
+    if (password.startsWith("token-")) return atob(password.substring(6));
+
+    window.localStorage["store.settings.password"] = JSON.stringify("token-" + btoa(password));
+    return password;
 }
+
 
 function addChatMenu()
 {
     if (getSetting("enableChat", false))
     {
-        chrome.contextMenus.create({id: "pade_chat", type: "normal", title: "Chat", contexts: ["browser_action"],  onclick: function()
+        chrome.contextMenus.create({parentId: "pade_applications", id: "pade_chat", type: "normal", title: "Candy Chat", contexts: ["browser_action"],  onclick: function()
         {
             openChatWindow("groupchat/index.html");
         }});
@@ -1388,28 +1488,28 @@ function removeChatMenu()
     chrome.contextMenus.remove("pade_chat");
 }
 
-function addSoftTurretMenu()
+function addInverseMenu()
 {
-    if (getSetting("enableST", false))
+    if (getSetting("enableInverse", false))
     {
-        chrome.contextMenus.create({id: "pade_apc", type: "normal", title: "Communicator", contexts: ["browser_action"],  onclick: function()
+        chrome.contextMenus.create({parentId: "pade_applications", id: "pade_inverse", type: "normal", title: "Inverse Client", contexts: ["browser_action"],  onclick: function()
         {
-            openApcWindow();
+            openChatWindow("inverse/index.html");
         }});
     }
 }
 
-function removeSoftTurretMenu()
+function removeInverseMenu()
 {
-    closeApcWindow();
-    chrome.contextMenus.remove("pade_apc");
+    closeChatWindow();
+    chrome.contextMenus.remove("pade_inverse");
 }
 
 function addBlogMenu()
 {
     if (getSetting("enableBlog", false))
     {
-        chrome.contextMenus.create({id: "pade_blog", type: "normal", title: "Blogger", contexts: ["browser_action"],  onclick: function()
+        chrome.contextMenus.create({parentId: "pade_applications", id: "pade_blog", type: "normal", title: "Blogger", contexts: ["browser_action"],  onclick: function()
         {
             openBlogWindow();
         }});
@@ -1420,6 +1520,23 @@ function removeBlogMenu()
 {
     closeBlogWindow();
     chrome.contextMenus.remove("pade_blog");
+}
+
+function addTouchPadMenu()
+{
+    if (getSetting("enableTouchPad", false))
+    {
+        chrome.contextMenus.create({id: "pade_apc", type: "normal", title: "Communicator TouchPad", contexts: ["browser_action"],  onclick: function()
+        {
+            openApcWindow();
+        }});
+    }
+}
+
+function removeTouchPadMenu()
+{
+    closeApcWindow();
+    chrome.contextMenus.remove("pade_apc");
 }
 
 function isAudioOnly()
@@ -1474,4 +1591,5 @@ function logCall(target, direction, duration)
     });
 */
 }
+
 

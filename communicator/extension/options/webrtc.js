@@ -1,10 +1,10 @@
 window.addEventListener("load", function()
 {
-    console.log("Etherlynk Communicator is trying to get permissions to use your video/audio devices");
+    console.log(chrome.i18n.getMessage('manifest_shortExtensionName') + " is trying to get permissions to use your video/audio devices");
 
     navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then(function(stream)
     {
-        console.log("Etherlynk Communicator now has permissions to use your video/audio devices");
+        console.log(chrome.i18n.getMessage('manifest_shortExtensionName') + " now has permissions to use your video/audio devices");
 
         setTimeout(function()
         {
@@ -17,7 +17,7 @@ window.addEventListener("load", function()
         }, 120000);
     })
     .catch(function(err) {
-        alert("To experience the full functionality of Etherlynk Communicator, please connect audio and video devices.");
+        alert("To experience the full functionality of " + chrome.i18n.getMessage('manifest_shortExtensionName') + ", please connect audio and video devices.");
         console.error("Error trying to get the stream:: " + err.message);
     });
 

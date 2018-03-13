@@ -1,10 +1,63 @@
 window.addEvent("domready", function () {
 
+    document.getElementById("settings-label").innerHTML = chrome.i18n.getMessage('manifest_shortExtensionName')
+
     doDefaults();
 
     new FancySettings.initWithManifest(function (settings)
     {
         var background = chrome.extension.getBackgroundPage();
+
+        settings.manifest.uploadApp.element.innerHTML = "<input id='uploadApplication' type='file' name='files[]'>";
+
+        document.getElementById("uploadApplication").addEventListener('change', function(event)
+        {
+            if (window.localStorage["store.settings.server"] && window.localStorage["store.settings.username"] && window.localStorage["store.settings.password"])
+            {
+                var files = event.target.files;
+                var server = JSON.parse(window.localStorage["store.settings.server"]);
+                var username = JSON.parse(window.localStorage["store.settings.username"]);
+                var password = getPassword(JSON.parse(window.localStorage["store.settings.password"]));
+
+                for (var i = 0, file; file = files[i]; i++)
+                {
+                    console.log("upload", file);
+
+                    if (file.name.endsWith(".zip"))
+                    {
+                        var putUrl = "https://" + server + "/chat/upload?name=" + file.name + "&username=" + username;
+                        var req = new XMLHttpRequest();
+
+                        req.onreadystatechange = function()
+                        {
+                          if (this.readyState == 4 && this.status >= 200 && this.status < 400)
+                          {
+                            console.log("pade.upload.app", this.statusText);
+                            settings.manifest.uploadStatus.element.innerHTML = '<b>' + this.statusText + '</b>';
+                          }
+                          else
+
+                          if (this.readyState == 4 && this.status >= 400)
+                          {
+                            console.error("pade.upload.error", this.statusText);
+                            settings.manifest.uploadStatus.element.innerHTML = '<b>' + this.statusText + '</b>';
+                          }
+
+                        };
+                        req.open("PUT", putUrl, true);
+                        req.setRequestHeader("Authorization", 'Basic ' + btoa(username+':'+password));
+                        req.send(file);
+                    } else {
+                        settings.manifest.uploadStatus.element.innerHTML = '<b>application file must be a zip file</b>';
+                    }
+                }
+
+            } else {
+                settings.manifest.uploadStatus.element.innerHTML = '<b>user not configured</b>';
+            }
+        });
+
+        setDefaultPassword(settings);
 
         settings.manifest.connect.addEvent("action", function ()
         {
@@ -65,8 +118,41 @@ window.addEvent("domready", function () {
             }
         });
 
+        settings.manifest.enableInverse.addEvent("action", function ()
+        {
+            if (getSetting("enableInverse"))
+            {
+                background.addInverseMenu();
+
+            } else {
+               background.removeInverseMenu();
+            }
+        });
+
+        settings.manifest.enableTouchPad.addEvent("action", function ()
+        {
+            if (getSetting("enableTouchPad"))
+            {
+                background.addTouchPadMenu();
+
+            } else {
+               background.removeTouchPadMenu();
+            }
+        });
+
         settings.manifest.enableSip.addEvent("action", function ()
         {
+            background.reloadApp();
+        });
+
+        settings.manifest.useTotp.addEvent("action", function ()
+        {
+            background.reloadApp();
+        });
+
+        settings.manifest.useClientCert.addEvent("action", function ()
+        {
+            setDefaultPassword(settings);
             background.reloadApp();
         });
 
@@ -81,17 +167,6 @@ window.addEvent("domready", function () {
             }
         });
 
-        settings.manifest.enableST.addEvent("action", function ()
-        {
-            if (getSetting("enableST"))
-            {
-                background.addSoftTurretMenu();
-
-            } else {
-               background.removeSoftTurretMenu();
-            }
-        });
-
         settings.manifest.desktopShareMode.addEvent("action", function ()
         {
             background.reloadApp();
@@ -102,35 +177,92 @@ window.addEvent("domready", function () {
             background.reloadApp();
         });
 
+        settings.manifest.qrcode.addEvent("action", function ()
+        {
+            if (window.localStorage["store.settings.server"])
+            {
+                var host = JSON.parse(window.localStorage["store.settings.server"]);
+                var url = "https://" + host + "/meet/qrcode.jsp";
+
+                chrome.windows.create({url: url, focused: true, type: "popup"}, function (win)
+                {
+                    chrome.windows.update(win.id, {drawAttention: true, width: 380, height: 270});
+                });
+            }
+        });
+
+        settings.manifest.certificate.addEvent("action", function ()
+        {
+            if (window.localStorage["store.settings.server"])
+            {
+                var host = JSON.parse(window.localStorage["store.settings.server"]);
+                var username = JSON.parse(window.localStorage["store.settings.username"]);
+                var password = getPassword(JSON.parse(window.localStorage["store.settings.password"]));
+
+                var url =  "https://" + host + "/rest/api/restapi/v1/chat/certificate";
+                var options = {method: "GET", headers: {"authorization": "Basic " + btoa(username + ":" + password)}};
+
+                console.log("fetch", url, options);
+
+                fetch(url, options).then(function(response){ return response.blob()}).then(function(blob)
+                {
+                    chrome.downloads.download({url: URL.createObjectURL(blob)});
+
+                }).catch(function (err) {
+                    console.error('connection error', err);
+                });
+
+            }
+        });
+
+
+
         function reloadApp(){
 
             openAppWindow()
         }
 
-    function openAppWindow()
-    {
-        if (window.localStorage["store.settings.server"] && window.localStorage["store.settings.domain"] && window.localStorage["store.settings.username"] && window.localStorage["store.settings.password"])
+        function openAppWindow()
         {
-            var lynks = {};
-
-            lynks.server = JSON.parse(window.localStorage["store.settings.server"]);
-            lynks.domain = JSON.parse(window.localStorage["store.settings.domain"]);
-            lynks.username = JSON.parse(window.localStorage["store.settings.username"]);
-            lynks.password = JSON.parse(window.localStorage["store.settings.password"]);
-
-            if (lynks.server && lynks.domain && lynks.username && lynks.password)
+            if (window.localStorage["store.settings.server"] && window.localStorage["store.settings.domain"] && window.localStorage["store.settings.username"] && window.localStorage["store.settings.password"])
             {
-                background.reloadApp();
-            }
-            else {
-                if (!lynks.server) settings.manifest.status.element.innerHTML = '<b>bad server</b>';
-                if (!lynks.domain) settings.manifest.status.element.innerHTML = '<b>bad domain</b>';
-                if (!lynks.username) settings.manifest.status.element.innerHTML = '<b>bad username</b>';
-                if (!lynks.password) settings.manifest.status.element.innerHTML = '<b>bad password</b>';
-            }
+                var lynks = {};
 
-            } else settings.manifest.status.element.innerHTML = '<b>bad bad server, domain, username or password</b>';
-    }
+                lynks.server = JSON.parse(window.localStorage["store.settings.server"]);
+                lynks.domain = JSON.parse(window.localStorage["store.settings.domain"]);
+                lynks.username = JSON.parse(window.localStorage["store.settings.username"]);
+                lynks.password = getPassword(JSON.parse(window.localStorage["store.settings.password"]));
+
+                if (lynks.server && lynks.domain && lynks.username && lynks.password)
+                {
+                    var connection = background.getConnection("https://" + lynks.server + "/http-bind/");
+
+                    connection.connect(lynks.username + "@" + lynks.domain + "/" + lynks.username, lynks.password, function (status)
+                    {
+                        //console.log("status", status);
+
+                        if (status === 5)
+                        {
+                            background.reloadApp();
+                        }
+                        else
+
+                        if (status === 4)
+                        {
+                            setDefaultPassword(settings);
+                            settings.manifest.status.element.innerHTML = '<b>bad username or password</b>';
+                        }
+                    });
+                }
+                else {
+                    if (!lynks.server) settings.manifest.status.element.innerHTML = '<b>bad server</b>';
+                    if (!lynks.domain) settings.manifest.status.element.innerHTML = '<b>bad domain</b>';
+                    if (!lynks.username) settings.manifest.status.element.innerHTML = '<b>bad username</b>';
+                    if (!lynks.password) settings.manifest.status.element.innerHTML = '<b>bad password</b>';
+                }
+
+            } else settings.manifest.status.element.innerHTML = '<b>bad server, domain, username or password</b>';
+        }
     });
 
 
@@ -139,18 +271,12 @@ window.addEvent("domready", function () {
 function doDefaults()
 {
     // preferences
-    setSetting("desktopShareMode", false)
-    setSetting("showOnlyOnlineUsers", true)
     setSetting("popupWindow", true);
-    setSetting("useJabra", false);
-    setSetting("useWebsocket", false);
-    setSetting("disableAudioLevels", false);
     setSetting("enableLipSync", false);
     setSetting("enableChat", false);
     setSetting("audioOnly", false);
     setSetting("enableSip", false);
     setSetting("enableBlog", false);
-    setSetting("enableST", false);
 
     // config
     setSetting("startWithAudioMuted", false);
@@ -164,11 +290,28 @@ function doDefaults()
     setSetting("chatWithOnlineContacts", true);
     setSetting("notifyWhenMentioned", true);
 
+    // converse
+    setSetting("enableInverse", true);
+    setSetting("notifyAllRoomMessages", true);
+    setSetting("allowNonRosterMessaging", true);
+    setSetting("rosterGroups", true);
+    setSetting("autoReconnect", true);
+}
+
+function setDefaultPassword(settings)
+{
+    settings.manifest.password.element.disabled = false;
+
+    if (settings.manifest.useClientCert.element.checked)
+    {
+        settings.manifest.password.element.disabled = true;
+        setSetting("password", settings.manifest.username.element.value);
+    }
 }
 
 function setSetting(name, defaultValue)
 {
-    //console.log("setSetting", name, defaultValue);
+    console.log("setSetting", name, defaultValue);
 
     if (!window.localStorage["store.settings." + name])
     {
@@ -188,3 +331,18 @@ function getSetting(name)
 
     return value;
 }
+
+function removeSetting(name)
+{
+    localStorage.removeItem("store.settings." + name);
+}
+
+function getPassword(password)
+{
+    if (!password || password == "") return null;
+    if (password.startsWith("token-")) return atob(password.substring(6));
+
+    window.localStorage["store.settings.password"] = JSON.stringify("token-" + btoa(password));
+    return password;
+}
+

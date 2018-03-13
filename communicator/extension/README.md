@@ -6,4 +6,4 @@ zip -r <zip-name> <folder-location> -x <exclusions>
 
 e.g.
 
-zip -r st.zip . -x *.git* -x *.iml -x *.DS_Store
+zip -r pade.zip . -x *.git* -x *.iml -x *.DS_Store

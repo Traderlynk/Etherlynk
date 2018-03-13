@@ -28,7 +28,7 @@ window.addEventListener("DOMContentLoaded", function()
             console.log("channel disconnect");
         });
 
-        if (bgWindow.getSetting("enableST", false))
+        if (bgWindow.getSetting("enableTouchPad", false))
         {
             if (bgWindow.getSetting("popupWindow", false))
             {

@@ -1,6 +1,6 @@
 this.manifest = {
-    "name": "Communicator",
-    "icon": "../tl_icon.png",
+    "name": chrome.i18n.getMessage('manifest_extensionName'),
+    "icon": "../icon.png",
     "settings": [
         {
             "tab": i18n.get("general"),
@@ -27,11 +27,39 @@ this.manifest = {
         },
         {
             "tab": i18n.get("general"),
+            "group": i18n.get("TOTP"),
+            "name": "useTotp",
+            "type": "checkbox",
+            "label": i18n.get("Time based One-Time Password - Use OfChat and FreeOTP or Google Authernticator App")
+        },
+        {
+            "tab": i18n.get("general"),
+            "group": i18n.get("TOTP"),
+            "name": "qrcode",
+            "type": "button",
+            "text": i18n.get("QR Code")
+        },
+        {
+            "tab": i18n.get("general"),
+            "group": i18n.get("Certificate"),
+            "name": "useClientCert",
+            "type": "checkbox",
+            "label": i18n.get("Use Client Certificate (No password required)")
+        },
+        {
+            "tab": i18n.get("general"),
+            "group": i18n.get("Certificate"),
+            "name": "certificate",
+            "type": "button",
+            "text": i18n.get("Download")
+        },
+        {
+            "tab": i18n.get("general"),
             "group": i18n.get("login"),
             "name": "displayname",
             "type": "text",
             "label": i18n.get("displayname"),
-            "text": i18n.get("x-characters")
+            "text": i18n.get("x_characters")
         },
         {
             "tab": i18n.get("general"),
@@ -39,7 +67,7 @@ this.manifest = {
             "name": "username",
             "type": "text",
             "label": i18n.get("username"),
-            "text": i18n.get("x-characters")
+            "text": i18n.get("x_characters")
         },
         {
             "tab": i18n.get("general"),
@@ -47,7 +75,7 @@ this.manifest = {
             "name": "password",
             "type": "text",
             "label": i18n.get("password"),
-            "text": i18n.get("x-characters-pw"),
+            "text": i18n.get("x_characters_pw"),
             "masked": true
         },
         {
@@ -55,7 +83,6 @@ this.manifest = {
             "group": i18n.get("login"),
             "name": "connect",
             "type": "button",
-            "label": i18n.get("connect"),
             "text": i18n.get("login")
         },
         {
@@ -110,20 +137,6 @@ this.manifest = {
         {
             "tab": i18n.get("general"),
             "group": i18n.get("Preferences"),
-            "name": "enableChat",
-            "type": "checkbox",
-            "label": i18n.get("Enable Candy Chat")
-        },
-        {
-            "tab": i18n.get("general"),
-            "group": i18n.get("Preferences"),
-            "name": "enableSip",
-            "type": "checkbox",
-            "label": i18n.get("Enable SIP Phone")
-        },
-        {
-            "tab": i18n.get("general"),
-            "group": i18n.get("Preferences"),
             "name": "audioOnly",
             "type": "checkbox",
             "label": i18n.get("Audioconference Only")
@@ -131,16 +144,9 @@ this.manifest = {
         {
             "tab": i18n.get("general"),
             "group": i18n.get("Preferences"),
-            "name": "enableBlog",
+            "name": "enableTouchPad",
             "type": "checkbox",
-            "label": i18n.get("Enable Blogging")
-        },
-        {
-            "tab": i18n.get("general"),
-            "group": i18n.get("Preferences"),
-            "name": "enableST",
-            "type": "checkbox",
-            "label": i18n.get("Enable ST")
+            "label": i18n.get("Enable Communicator TouchPad")
         },
         {                                                   // ofmeet config
             "tab": i18n.get("ofmeet"),
@@ -217,6 +223,13 @@ this.manifest = {
             "label": i18n.get("Filmstrip Maximium Height"),
             "text": i18n.get("80"),
         },
+        {                                      // candy chat
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Candy Chat"),
+            "name": "enableChat",
+            "type": "checkbox",
+            "label": i18n.get("Enable Candy Chat")
+        },
         {
             "tab": i18n.get("ofmeet"),
             "group": i18n.get("Candy Chat"),
@@ -231,60 +244,97 @@ this.manifest = {
             "type": "checkbox",
             "label": i18n.get("Notify/Highlight when mentioned")
         },
-        {                                           // blogger
-            "tab": i18n.get("Blogging"),
+        {                                             // converse-inverse
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Converse"),
+            "name": "enableInverse",
+            "type": "checkbox",
+            "label": i18n.get("Enable Converse")
+        },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Converse"),
+            "name": "converseDebug",
+            "type": "checkbox",
+            "label": i18n.get("Enable Debug")
+        },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Converse"),
+            "name": "notifyAllRoomMessages",
+            "type": "checkbox",
+            "label": i18n.get("Notify all room messages")
+        },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Converse"),
+            "name": "messageCarbons",
+            "type": "checkbox",
+            "label": i18n.get("Enable message carbons")
+        },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Converse"),
+            "name": "autoReconnect",
+            "type": "checkbox",
+            "label": i18n.get("Auto reconnect")
+        },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Converse"),
+            "name": "rosterGroups",
+            "type": "checkbox",
+            "label": i18n.get("Show roster groups")
+        },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Converse"),
+            "name": "allowNonRosterMessaging",
+            "type": "checkbox",
+            "label": i18n.get("Allow non roster messaging")
+        },
+        {                                       // blogger
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Blogger"),
+            "name": "enableBlog",
+            "type": "checkbox",
+            "label": i18n.get("Enable Blogging")
+        },
+        {
+            "tab": i18n.get("ofmeet"),
             "group": i18n.get("Blogger"),
             "name": "blogName",
             "type": "text",
             "label": i18n.get("Blog Name"),
             "text": i18n.get("solo"),
         },
-        {                                           // soft turret
-            "tab": i18n.get("ST Page:1"),
-            "group": i18n.get("General"),
-            "name": "pageLabel_1",
-            "type": "text",
-            "label": i18n.get("Label"),
-            "text": i18n.get("Enter the label for page 1"),
-        },
         {
-            "tab": i18n.get("ST Page:2"),
-            "group": i18n.get("General"),
-            "name": "pageLabel_2",
-            "type": "text",
-            "label": i18n.get("Label"),
-            "text": i18n.get("Enter the label for page 2"),
-        },
-        {
-            "tab": i18n.get("ST Page:3"),
-            "group": i18n.get("General"),
-            "name": "pageLabel_3",
-            "type": "text",
-            "label": i18n.get("Label"),
-            "text": i18n.get("Enter the label for page 3"),
-        },
-        {
-            "tab": i18n.get("ST Page:4"),
-            "group": i18n.get("General"),
-            "name": "pageLabel_4",
-            "type": "text",
-            "label": i18n.get("Label"),
-            "text": i18n.get("Enter the label for page 4"),
-        },
-        {
-            "tab": i18n.get("ST Page:5"),
-            "group": i18n.get("General"),
-            "name": "pageLabel_5",
-            "type": "text",
-            "label": i18n.get("Label"),
-            "text": i18n.get("Enter the label for page 5"),
-        },
-        {
-            "tab": i18n.get("ST Speakers"),
-            "group": i18n.get("General"),
-            "name": "speakersEnabled",
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("SIP Phone"),
+            "name": "enableSip",
             "type": "checkbox",
-            "label": i18n.get("Enable Speakers"),
+            "label": i18n.get("Enable SIP Phone")
+        },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Collaboration"),
+            "name": "uploadAppLabel",
+            "type": "description",
+            "text": i18n.get("upload_app")
+        },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Collaboration"),
+            "name": "uploadApp",
+            "type": "description",
+            "text": ""
+        },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Collaboration"),
+            "name": "uploadStatus",
+            "type": "description",
+            "text": ""
         },
         {                                           // user directory
             "tab": i18n.get("User Directory"),
@@ -308,6 +358,53 @@ this.manifest = {
             "name": "searchResults",
             "text": i18n.get(""),
             "type": "description"
+        },
+        {                                           // touch pad
+            "tab": i18n.get("TouchPad Page:1"),
+            "group": i18n.get("General"),
+            "name": "pageLabel_1",
+            "type": "text",
+            "label": i18n.get("Label"),
+            "text": i18n.get("Enter the label for page 1"),
+        },
+        {
+            "tab": i18n.get("TouchPad Page:2"),
+            "group": i18n.get("General"),
+            "name": "pageLabel_2",
+            "type": "text",
+            "label": i18n.get("Label"),
+            "text": i18n.get("Enter the label for page 2"),
+        },
+        {
+            "tab": i18n.get("TouchPad Page:3"),
+            "group": i18n.get("General"),
+            "name": "pageLabel_3",
+            "type": "text",
+            "label": i18n.get("Label"),
+            "text": i18n.get("Enter the label for page 3"),
+        },
+        {
+            "tab": i18n.get("TouchPad Page:4"),
+            "group": i18n.get("General"),
+            "name": "pageLabel_4",
+            "type": "text",
+            "label": i18n.get("Label"),
+            "text": i18n.get("Enter the label for page 4"),
+        },
+        {
+            "tab": i18n.get("TouchPad Page:5"),
+            "group": i18n.get("General"),
+            "name": "pageLabel_5",
+            "type": "text",
+            "label": i18n.get("Label"),
+            "text": i18n.get("Enter the label for page 5"),
+        },
+        {
+            "tab": i18n.get("TouchPad Speakers"),
+            "group": i18n.get("General"),
+            "name": "speakersEnabled",
+            "type": "checkbox",
+            "label": i18n.get("Enable Speakers"),
         }
     ],
     "alignment": [
@@ -336,7 +433,7 @@ for (var p=1; p<6; p++)
 {
     this.manifest.settings.push(
     {
-        "tab": i18n.get("ST Page:" + p),
+        "tab": i18n.get("TouchPad Page:" + p),
         "group": i18n.get("General"),
         "name": "pageEnabled_" + p,
         "type": "checkbox",
@@ -349,7 +446,7 @@ for (var p=1; p<6; p++)
         {
             this.manifest.settings.push(
             {
-                "tab": i18n.get("ST Page:" + p),
+                "tab": i18n.get("TouchPad Page:" + p),
                 "group": i18n.get("Cell " + i + "/" + j),
                 "name": "cellEnabled_" + p + "_" + i + "_" + j,
                 "type": "checkbox",
@@ -358,7 +455,7 @@ for (var p=1; p<6; p++)
 
             this.manifest.settings.push(
             {
-                "tab": i18n.get("ST Page:" + p),
+                "tab": i18n.get("TouchPad Page:" + p),
                 "group": i18n.get("Cell " + i + "/" + j),
                 "name": "cellLabel_" + p + "_" + i + "_" + j,
                 "type": "text",
@@ -368,7 +465,7 @@ for (var p=1; p<6; p++)
 
             this.manifest.settings.push(
             {
-                "tab": i18n.get("ST Page:" + p),
+                "tab": i18n.get("TouchPad Page:" + p),
                 "group": i18n.get("Cell " + i + "/" + j),
                 "name": "cellValue_" + p + "_" + i + "_" + j,
                 "type": "text",
@@ -383,7 +480,7 @@ for (var s=1; s<9; s++)
 {
     this.manifest.settings.push(
     {
-        "tab": i18n.get("ST Speakers"),
+        "tab": i18n.get("TouchPad Speakers"),
         "group": i18n.get("Speaker " + s),
         "name": "speakerEnabled_" + s,
         "type": "checkbox",
@@ -392,7 +489,7 @@ for (var s=1; s<9; s++)
 
     this.manifest.settings.push(
     {
-        "tab": i18n.get("ST Speakers"),
+        "tab": i18n.get("TouchPad Speakers"),
         "group": i18n.get("Speaker " + s),
         "name": "speakerLabel_" + s,
         "type": "text",
@@ -402,7 +499,7 @@ for (var s=1; s<9; s++)
 
     this.manifest.settings.push(
     {
-        "tab": i18n.get("ST Speakers"),
+        "tab": i18n.get("TouchPad Speakers"),
         "group": i18n.get("Speaker " + s),
         "name": "speakerValue_" + s,
         "type": "text",

@@ -110,9 +110,12 @@ var etherlynk = (function(lynk)
         }
     }
 
-    function connectXMPP(name, params)
+
+    function connectXMPP(name, params, options)
     {
-        lynk.connections[name] = new JitsiMeetJS.JitsiConnection(null, null, lynk.options);
+        if (!options) options = setupConfig(pade.server, pade.domain);
+
+        lynk.connections[name] = new JitsiMeetJS.JitsiConnection(null, null, options);
         lynk.connections[name].params = params;
 
         if (lynk.connections[name])
@@ -139,7 +142,7 @@ var etherlynk = (function(lynk)
             lynk.connections[name].addEventListener(JitsiMeetJS.events.connection.CONNECTION_DISCONNECTED, function()
             {
                 console.log("Connection Disconnected!", name)
-                $(document).trigger("ofmeet.conference.left", {id : pade.username, name: name});
+                if (pade.port) pade.port.postMessage({event: "disconnected", id : pade.username, name: name});
             });
 
             lynk.connections[name].connect();
@@ -200,15 +203,13 @@ var etherlynk = (function(lynk)
                     console.log("Etherlynk recognition started ok");
                 }
 
-                if (pade.enableSip) dial(name, {extraHeaders: [ 'X-ofmeet-userid: ' + pade.username, 'X-ofmeet-room: ' + name ]});
+                // TODO fix conflict with Jisti
+                //if (pade.enableSip) dial(name, {extraHeaders: [ 'X-ofmeet-userid: ' + pade.username, 'X-ofmeet-room: ' + name ]});
 
                 return;
             }
 
-            if (pade.username != track.getParticipantId())
-            {
-                $(document).trigger("ofmeet.track.added", {id : track.getParticipantId(), name: name});
-            }
+            if (pade.port) pade.port.postMessage({event: "joined", id : track.getParticipantId(), name: name});
 
             var participant = track.getParticipantId();
             var id = "remoteAudio-" + name;
@@ -233,9 +234,10 @@ var etherlynk = (function(lynk)
                 }
                 track.attach(audio);
                 track.track.enabled = true;
-                lynk.localAudioTracks[name].track.enabled = true;
 
-                if (lynk.connections[name].params && lynk.connections[name].params.mute)
+                if (lynk.localAudioTracks[name]) lynk.localAudioTracks[name].track.enabled = true;
+
+                if (lynk.connections[name] && lynk.connections[name].params && lynk.connections[name].params.mute)
                 {
                     lynk.localAudioTracks[name].track.enabled = false;
                 }
@@ -246,41 +248,34 @@ var etherlynk = (function(lynk)
         {
             console.log("track removed!!!", track, name);
 
-            if (pade.username != track.getParticipantId())
-            {
-                $(document).trigger("ofmeet.track.removed", {id : track.getParticipantId(), name: name});
-            }
+            if (pade.port) pade.port.postMessage({event: "left", id : track.getParticipantId(), name: name});
         });
 
         room.on(JitsiMeetJS.events.conference.CONFERENCE_JOINED, function ()
         {
-            console.log("conference joined!", name);
+            console.log("conference joined!", name, pade.port);
             room.addTrack(lynk.localAudioTracks[name]);
 
-            $(document).trigger("ofmeet.conference.joined", {id : pade.username, name: name});
+            if (pade.port) pade.port.postMessage({event: "connected", id : pade.username, name: name});
+
         });
         room.on(JitsiMeetJS.events.conference.CONFERENCE_LEFT, function ()
         {
-            console.log("conference left!", name);
+            console.log("conference left!", name, pade.port);
             room.removeTrack(lynk.localAudioTracks[name]);
-
-            $(document).trigger("ofmeet.conference.left", {id : pade.username, name: name});
         });
         room.on(JitsiMeetJS.events.conference.USER_JOINED, function (id)
         {
             console.log("user join", name, id);
-            $(document).trigger("ofmeet.user.joined", {id : id, name: name});
         });
         room.on(JitsiMeetJS.events.conference.USER_LEFT, function (id)
         {
             console.log("user left", name, id);
-            $(document).trigger("ofmeet.user.left", {id : id, name: name});
         });
 
         room.on(JitsiMeetJS.events.conference.DOMINANT_SPEAKER_CHANGED, function (id)
         {
             console.log("dominant speaker changed", name, id);
-            $(document).trigger("ofmeet.dominant.speaker", {id: id});
         });
 
         room.join();
@@ -300,11 +295,12 @@ var etherlynk = (function(lynk)
 
         if (pos > -1) sip = server.substring(0, pos);
 
-        lynk.options = {
+        return {
                 hosts: {
                 domain: domain,
                 muc: "conference." + domain,
                 server: server,
+                focus: "focus." + domain,
                 sip: sip
             },
             p2p: {
@@ -318,7 +314,7 @@ var etherlynk = (function(lynk)
             },
             nickName: pade.username,
             username: pade.username,
-            bosh: "wss://" + server + "/ws/",
+            bosh: domain.startsWith("meet.jit.si") ? "https://" + server + "/http-bind" : "wss://" + server + "/ws/",
             clientNode: 'etherlynk'
         };
     }
@@ -391,24 +387,22 @@ var etherlynk = (function(lynk)
 
     function connectSIP()
     {
-        console.log("connectSIP", lynk.options);
-
-        lynk.sip.sessions = {}
-        lynk.sip.remoteAudioElements = {};
+        var options = setupConfig(pade.server, pade.domain);
+        console.log("connectSIP", options);
 
         var getTurnServers = function()
         {
             var turnServers = null;
 
-            if (lynk.options.iceServers && lynk.options.iceServers.iceServers)
+            if (options.iceServers && options.iceServers.iceServers)
             {
                 turnServers = [];
 
-                for (var i=0; i<lynk.options.iceServers.iceServers.length; i++)
+                for (var i=0; i<options.iceServers.iceServers.length; i++)
                 {
-                    if (lynk.options.iceServers.iceServers[i].url.indexOf("turn:") > -1 || lynk.options.iceServers.iceServers[i].url.indexOf("turns:") > -1)
+                    if (options.iceServers.iceServers[i].url.indexOf("turn:") > -1 || options.iceServers.iceServers[i].url.indexOf("turns:") > -1)
                     {
-                        turnServers.push({urls: lynk.options.iceServers.iceServers[i].url, username: lynk.options.iceServers.iceServers[i].username, password: lynk.options.iceServers.iceServers[i].credential})
+                        turnServers.push({urls: options.iceServers.iceServers[i].url, username: options.iceServers.iceServers[i].username, password: options.iceServers.iceServers[i].credential})
                     }
                 }
             }
@@ -420,15 +414,15 @@ var etherlynk = (function(lynk)
         {
             var stunServers = null;
 
-            if (lynk.options.iceServers && lynk.options.iceServers.iceServers)
+            if (options.iceServers && options.iceServers.iceServers)
             {
                 stunServers = [];
 
-                for (var i=0; i<lynk.options.iceServers.iceServers.length; i++)
+                for (var i=0; i<options.iceServers.iceServers.length; i++)
                 {
-                    if (lynk.options.iceServers.iceServers[i].url.indexOf("stun:") > -1 || lynk.options.iceServers.iceServers[i].url.indexOf("stuns:") > -1)
+                    if (options.iceServers.iceServers[i].url.indexOf("stun:") > -1 || options.iceServers.iceServers[i].url.indexOf("stuns:") > -1)
                     {
-                        stunServers.push(lynk.options.iceServers.iceServers[i].url)
+                        stunServers.push(options.iceServers.iceServers[i].url)
                     }
                 }
             }
@@ -436,16 +430,16 @@ var etherlynk = (function(lynk)
             return stunServers;
         }
 
-        var uri = 'sip:default@' + lynk.options.hosts.sip;
-        var wsServers = "wss://" + lynk.options.hosts.server + "/sip/proxy?url=ws://" + lynk.options.hosts.sip + ":5066";
+        var uri = 'sip:default@' + options.hosts.sip;
+        var wsServers = "wss://" + options.hosts.server + "/sip/proxy?url=ws://" + options.hosts.sip + ":5066";
 
         if (pade.sip.authUsername)
         {
             uri = 'sip:' + pade.sip.authUsername + '@' + pade.sip.server;
-            wsServers = "wss://" + lynk.options.hosts.server + "/sip/proxy?url=ws://" + pade.sip.server + ":5066";
+            wsServers = "wss://" + options.hosts.server + "/sip/proxy?url=ws://" + pade.sip.server + ":5066";
         }
 
-        var sipIdentity = pade.sip.displayPhoneNum ? pade.sip.displayPhoneNum:  lynk.options.nickName;
+        var sipIdentity = pade.sip.displayPhoneNum ? pade.sip.displayPhoneNum:  options.nickName;
 
         lynk.sip.sipUI = new SIP.UA(
         {
@@ -478,7 +472,7 @@ var etherlynk = (function(lynk)
 
             if (!pade.sip.registered)
             {
-                notifyText("SIP: " + sipIdentity, "Registered",null,null,null,"sip-notify");
+                notifyText("SIP Phone", "Registered",null,null,null,"sip-notify");
                 pade.sip.registered = true;
 
                 if (pade.sip.authUsername) setSipStatus("Registered");
@@ -520,6 +514,7 @@ var etherlynk = (function(lynk)
 
             var id = incomingSession.remoteIdentity.uri.user;
             lynk.sip.sessions[id] = incomingSession;
+
             setupCallHandlers(incomingSession);
 
             JitsiMeetJS.createLocalTracks({devices: ["audio"]}).then(function(tracks)
@@ -542,63 +537,65 @@ var etherlynk = (function(lynk)
 
         newSess.on('progress', function(e) {
             console.log("progress", displayName, uri);
-            if (pade.port) pade.port.postMessage({event: "progress", id: id, uri: uri, displayName: displayName});
+            if (pade.port) pade.port.postMessage({event: "progress", name: id, uri: uri, displayName: displayName});
         });
 
         newSess.on('connecting', function(e) {
             console.log("connecting", displayName, uri);
-            if (pade.port) pade.port.postMessage({event: "connecting", id: id, uri: uri, displayName: displayName});
+            if (pade.port) pade.port.postMessage({event: "connecting", name: id, uri: uri, displayName: displayName});
         });
 
         newSess.on('accepted', function(e) {
             console.log("accepted", displayName, uri);
-            if (pade.port) pade.port.postMessage({event: "accepted", id: id, uri: uri, displayName: displayName});
+            if (pade.port) pade.port.postMessage({event: "connected", name: id, uri: uri, displayName: displayName});
         });
 
         newSess.on('hold', function(e) {
             console.log("hold", displayName, uri);
-            if (pade.port) pade.port.postMessage({event: "hold", id: id, uri: uri, displayName: displayName});
+            if (pade.port) pade.port.postMessage({event: "hold", name: id, uri: uri, displayName: displayName});
         });
 
         newSess.on('unhold', function(e) {
             console.log("unhold", displayName, uri);
-            if (pade.port) pade.port.postMessage({event: "unhold", id: id, uri: uri, displayName: displayName});
+            if (pade.port) pade.port.postMessage({event: "unhold", name: id, uri: uri, displayName: displayName});
         });
 
         newSess.on('muted', function(e) {
             console.log("muted", displayName, uri);
-            if (pade.port) pade.port.postMessage({event: "muted", id: id, uri: uri, displayName: displayName});
+            if (pade.port) pade.port.postMessage({event: "muted", name: id, uri: uri, displayName: displayName});
         });
 
         newSess.on('unmuted', function(e) {
             console.log("unmuted", displayName, uri);
-            if (pade.port) pade.port.postMessage({event: "unmuted", id: id, uri: uri, displayName: displayName});
+            if (pade.port) pade.port.postMessage({event: "unmuted", name: id, uri: uri, displayName: displayName});
         });
 
         newSess.on('cancel', function(e) {
             console.log("cancel", displayName, uri);
-            if (pade.port) pade.port.postMessage({event: "cancel", id: id, uri: uri, displayName: displayName});
+            if (pade.port) pade.port.postMessage({event: "cancel", name: id, uri: uri, displayName: displayName});
         });
 
         newSess.on('bye', function(e) {
             console.log("bye", displayName, uri);
             cleanupMedia(id);
-            if (pade.port) pade.port.postMessage({event: "bye", id: id, uri: uri, displayName: displayName});
+            if (pade.port) pade.port.postMessage({event: "disconnected", name: id, uri: uri, displayName: displayName});
         });
 
         newSess.on('failed', function(e) {
             console.log("failed", displayName, uri);
-            if (pade.port) pade.port.postMessage({event: "failed", id: id, uri: uri, displayName: displayName});
+            if (pade.port) pade.port.postMessage({event: "failed", name: id, uri: uri, displayName: displayName});
         });
 
         newSess.on('rejected', function(e) {
             console.log("rejected", displayName, uri);
-            if (pade.port) pade.port.postMessage({event: "rejected", id: id, uri: uri, displayName: displayName});
+            if (pade.port) pade.port.postMessage({event: "rejected", name: id, uri: uri, displayName: displayName});
         });
     }
 
     function acceptSipCall(id)
     {
+        console.log("acceptSipCall", id);
+
         lynk.sip.sessions[id].accept({
             media : {
             stream      : lynk.localAudioTracks[id].stream,
@@ -612,6 +609,8 @@ var etherlynk = (function(lynk)
 
     function accept(id)
     {
+        console.log("accept", id);
+
         if (lynk.sip.sessions[id].request.headers["Call-Info"] &&
             lynk.sip.sessions[id].request.headers["Call-Info"][0] &&
             lynk.sip.sessions[id].request.headers["Call-Info"][0].raw.indexOf("answer-after=0") > -1)
@@ -620,11 +619,21 @@ var etherlynk = (function(lynk)
         }
         else
 
-        if (pade.sip.window == null)
+        if (pade.port)
         {
-            openPhoneWindow(false);
-            pade.sip.incomingSession = lynk.sip.sessions[id];
-            pade.sip.incomingCall = true;
+            var displayName = lynk.sip.sessions[id].remoteIdentity.displayName;
+            var uri = lynk.sip.sessions[id].remoteIdentity.uri.toString();
+
+            pade.port.postMessage({event: "invited", name: id, uri: uri, displayName: displayName});
+
+        } else {
+
+            if (pade.sip.window == null)
+            {
+                openPhoneWindow(false);
+                pade.sip.incomingSession = lynk.sip.sessions[id];
+                pade.sip.incomingCall = true;
+            }
         }
     }
 
@@ -649,6 +658,8 @@ var etherlynk = (function(lynk)
     function dial(name, options)
     {
         console.log("dial", name, options);
+
+        if (!options) options = {};
 
         var setupRemoteAudio = function(name)
         {
@@ -703,6 +714,34 @@ var etherlynk = (function(lynk)
         }
     }
 
+    function startJitsiAudio(name, params, state)
+    {
+        var url = name.split("/");
+
+        if (url.length == 4)
+        {
+            var jid = url[2].split(":");
+            var domain = jid[0];
+            var host = url[2];
+
+            if (jid[0].indexOf("@") > -1)
+            {
+                domain = jid[0].split("@")[1];
+                host = url[2].split("@")[1];
+
+                // conversation, alert far party
+                inviteToConference(jid[0], url[3]);
+            }
+
+            connectXMPP(url[3], params, setupConfig(host, domain));
+
+        } else {
+            var msg = "Bad jitsi-meet conference room: " + name + ", expecting https://domain:port/room";
+            console.error(msg, url);
+            notifyText("Communicator", msg);
+        }
+    }
+
     //-------------------------------------------------------
     //
     //  etherlynk xmpp public
@@ -717,15 +756,17 @@ var etherlynk = (function(lynk)
         {
             console.log("etherlynk connect");
 
-            setupConfig(pade.server, pade.domain);
             setupSpeechRecognition();
 
             // TODO - merge with ofmeet SIP
-            if (pade.enableSip || pade.enableST) connectSIP();
+            // Issue with SIP and JitsiMeet chat
 
         }).catch(function (error) {
             console.log(error);
         });
+
+        lynk.sip.sessions = {}
+        lynk.sip.remoteAudioElements = {};
     }
 
     lynk.disconnect = function()
@@ -748,14 +789,42 @@ var etherlynk = (function(lynk)
         console.log("Etherlynk logoff ok");
     }
 
-    lynk.join = function(name, params)
+    lynk.join = function(name, params, state)
     {
-        connectXMPP(name, params)
-        console.log("etherlynk join " + name, params);
+        console.log("etherlynk join " + name, params, state);
+
+        if (name.startsWith("tel:"))
+        {
+            if (state == "invited")
+            {
+                acceptSipCall(name.substring(4));
+
+            } else {
+                dial(name.substring(4), {});
+            }
+
+        } else {
+
+            // name can be [https://name@domain:port/room] or just [room]
+
+            if (name.startsWith("https://") || name.startsWith("http://"))
+            {
+                if (name.indexOf(pade.server) > -1)         // own videobridge
+                {
+                    startJitsiAudio(name, params, state);
+
+                } else {
+                    openVideoWindowUrl(name);
+                }
+            }
+            else connectXMPP(name, params);
+        }
     }
 
     lynk.mute = function(name)
     {
+        if (name.startsWith("https://") || name.startsWith("http://")) name = name.split("/")[3];
+
         if (lynk.localAudioTracks[name])
         {
             lynk.localAudioTracks[name].track.enabled = !lynk.localAudioTracks[name].track.enabled;
@@ -766,6 +835,8 @@ var etherlynk = (function(lynk)
 
     lynk.muteLocal = function(name, flag)
     {
+        if (name.startsWith("https://") || name.startsWith("http://")) name = name.split("/")[3];
+
         if (lynk.localAudioTracks[name])
         {
             lynk.localAudioTracks[name].track.enabled = !flag;
@@ -776,25 +847,46 @@ var etherlynk = (function(lynk)
 
     lynk.leave = function(name)
     {
-
-        if (Object.getOwnPropertyNames(lynk.conferences).length == 1)
+        if (name.startsWith("tel:"))
         {
-            sendSpeechRecognition()
-            lynk.recognition.stop();
-            console.log("Etherlynk recognition stopped");
-        }
+            hangup(name.substring(4));
 
-        if (lynk.connections[name])
-        {
-            lynk.connections[name].xmpp.connection.ping.stopInterval();
-            cleanupConnection(name);
+        } else {
 
-            console.log("Etherlynk leave " + name);
+            if (name.startsWith("https://") || name.startsWith("http://")) name = name.split("/")[3];
+
+            if (lynk.connections[name])
+            {
+                lynk.connections[name].xmpp.connection.ping.stopInterval();
+                cleanupConnection(name);
+
+                console.log("Etherlynk leave " + name);
+            }
+
+            try {
+                if (Object.getOwnPropertyNames(lynk.conferences).length == 0)
+                {
+                    sendSpeechRecognition()
+                    lynk.recognition.stop();
+                    console.log("Etherlynk recognition stopped");
+                }
+
+            } catch (e) {
+                console.error(e);
+            }
         }
     }
 
-    // SIP
+    //-------------------------------------------------------
+    //
+    //  etherlynk sip public
+    //
+    //-------------------------------------------------------
 
+    lynk.connectSIP = function()
+    {
+        connectSIP();
+    }
 
     lynk.dial = function(destination, options)
     {

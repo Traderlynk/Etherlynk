@@ -3,10 +3,10 @@
   "minimum_chrome_version": "34",  
   "options_page": "options/index.html",  
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' 'unsafe-inline' data: http: https:",  
-  "short_name": "etherlynk",
-  "name": "Etherlynk Communicator",
-  "description": "De-centralized Communications for Enterprise Ethereum",
-  "version": "0.2.2",
+  "short_name": "__MSG_manifest_shortExtensionName__",
+  "name": "__MSG_manifest_extensionName__",
+  "description": "__MSG_manifest_extensionDescription__",
+  "version": "0.3.1",
     
   "background": {
         "persistent": true,
@@ -24,15 +24,15 @@
    
   "browser_action": {
       "default_icon": {
-         "19": "tl_icon.png",
-         "38": "tl_icon.png"
+         "19": "icon.png",
+         "38": "icon.png"
       }   
   },
 
    "icons": {
-      "128": "tl_icon.png",
-      "16": "tl_icon.png",
-      "48": "tl_icon.png"
+      "128": "image.png",
+      "16": "icon.png",
+      "48": "image.png"
    }, 
   
   "web_accessible_resources": [
@@ -47,6 +47,7 @@
   
   "permissions": [
     "background", 
+    "downloads",
     "contextMenus", 
     "desktopCapture",
     "nativeMessaging",
@@ -59,13 +60,34 @@
   ],
   
   "commands": {
-    "_execute_browser_action": {
-      "description": "Open Etherlynk Communicator",     
-      "suggested_key": {
-        "default": "Ctrl+M",
-        "mac": "MacCtrl+M"
-      }
-    }
+    "activate_meeting": {
+        "suggested_key": {
+          "default": "Ctrl+Shift+1"
+        },
+        "description": "Activate Meeting",
+        "global": true
+    },  
+    "activate_chat": {
+        "suggested_key": {
+          "default": "Ctrl+Shift+2"
+        },
+        "description": "Activate Candy/Inverse Client",
+        "global": true
+    },    
+    "activate_blogger_communicator": {
+        "suggested_key": {
+          "default": "Ctrl+Shift+3"
+        },
+        "description": "Activate Blogger/Communicator",
+        "global": true
+    }, 
+    "activate_phone": {
+        "suggested_key": {
+          "default": "Ctrl+Shift+4"
+        },
+        "description": "Activate SIP Phone",
+        "global": true
+    }    
   },
   "externally_connectable": {
       "matches": [
@@ -76,7 +98,9 @@
           "*://xmpp.igniterealtime.org/*", 
           "*://etherlynk.4ng.net/*",           
           "*://traderlynk.4ng.net/*",
+          "*://portal.bizie.com/*",          
           "*://traderlynk.net/*"          
       ]
-  }  
+  },
+  "default_locale": "en"  
 }
