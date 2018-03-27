@@ -134,6 +134,17 @@ window.addEvent("domready", function () {
             }
         });
 
+        settings.manifest.enableBlast.addEvent("action", function ()
+        {
+            if (getSetting("enableBlast"))
+            {
+                background.addBlastMenu();
+
+            } else {
+               background.removeBlastMenu();
+            }
+        });
+
         settings.manifest.desktopShareMode.addEvent("action", function ()
         {
             background.reloadApp();

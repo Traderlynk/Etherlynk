@@ -77,6 +77,7 @@ window.addEventListener("unload", function ()
     closeVideoWindow();
     closePhoneWindow();
     closeBlogWindow();
+    closeBlastWindow();
 });
 
 window.addEventListener("load", function()
@@ -207,6 +208,7 @@ window.addEventListener("load", function()
     addChatMenu();
     addInverseMenu();
     addBlogMenu();
+    addBlastMenu();
     addTouchPadMenu();
 
     chrome.notifications.onClosed.addListener(function(notificationId, byUser)
@@ -307,6 +309,11 @@ window.addEventListener("load", function()
         if (pade.blogWindow && win == pade.blogWindow.id)
         {
             pade.blogWindow = null;
+        }
+
+        if (pade.blastWindow && win == pade.blastWindow.id)
+        {
+            pade.blastWindow = null;
         }
 
         if (pade.videoWindow && win == pade.videoWindow.id)
@@ -827,6 +834,32 @@ function openBlogWindow()
         });
     } else {
         chrome.windows.update(pade.blogWindow.id, {drawAttention: true, focused: true, width: 1024, height: 800});
+    }
+}
+
+function closeBlastWindow()
+{
+    if (pade.blastWindow != null)
+    {
+        try {
+            chrome.windows.remove(pade.blastWindow.id);
+        } catch (e) {}
+    }
+}
+
+function openBlastWindow()
+{
+    if (!pade.blastWindow)
+    {
+        var url = "https://" + pade.server + "/dashboard/blast";
+
+        chrome.windows.create({url: url, width: 1024, height: 800, focused: true, type: "popup"}, function (win)
+        {
+            pade.blastWindow = win;
+            chrome.windows.update(pade.blastWindow.id, {drawAttention: true});
+        });
+    } else {
+        chrome.windows.update(pade.blastWindow.id, {drawAttention: true, focused: true, width: 1024, height: 800});
     }
 }
 
@@ -1532,6 +1565,23 @@ function removeBlogMenu()
 {
     closeBlogWindow();
     chrome.contextMenus.remove("pade_blog");
+}
+
+function addBlastMenu()
+{
+    if (getSetting("enableBlast", false))
+    {
+        chrome.contextMenus.create({parentId: "pade_applications", id: "pade_blast", type: "normal", title: "Message Blast", contexts: ["browser_action"],  onclick: function()
+        {
+            openBlastWindow();
+        }});
+    }
+}
+
+function removeBlastMenu()
+{
+    closeBlastWindow();
+    chrome.contextMenus.remove("pade_blast");
 }
 
 function addTouchPadMenu()

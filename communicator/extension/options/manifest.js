@@ -329,6 +329,13 @@ this.manifest = {
             "label": i18n.get("Blog Name"),
             "text": i18n.get("solo"),
         },
+        {                                       // message blast
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Message Blast"),
+            "name": "enableBlast",
+            "type": "checkbox",
+            "label": i18n.get("Enable Message Blast")
+        },
         {
             "tab": i18n.get("ofmeet"),
             "group": i18n.get("SIP Phone"),
