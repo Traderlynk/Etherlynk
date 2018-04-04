@@ -257,10 +257,11 @@ function doDefaults()
     setSetting("enableBlog", false);
 
     // config
-    setSetting("startWithAudioMuted", false);
-    setSetting("startWithVideoMuted", false);
+    setSetting("enableTranscription", true);
+
 
     // user interface
+    setSetting("CAPTIONS_SUBTITLES", true);
     setSetting("VERTICAL_FILMSTRIP", true);
     setSetting("FILM_STRIP_MAX_HEIGHT", 90);
 
@@ -341,7 +342,7 @@ function uploadApplication(event, settings)
 
             if (file.name.endsWith(".zip"))
             {
-                var putUrl = "https://" + server + "/chat/upload?name=" + file.name + "&username=" + username;
+                var putUrl = "https://" + server + "/dashboard/upload?name=" + file.name + "&username=" + username;
                 var req = new XMLHttpRequest();
 
                 req.onreadystatechange = function()

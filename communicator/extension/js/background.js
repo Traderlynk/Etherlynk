@@ -1261,6 +1261,21 @@ function inviteToConference(jid, room)
     }
 }
 
+function injectMessage(message, room, nickname)
+{
+    //console.log("injectMessage", message, room);
+
+    try {
+        var msg = $msg({to: room + "@conference." + pade.domain, type: "groupchat"});
+        msg.c("body", message).up();
+        msg.c("nick", {xmlns: "http://jabber.org/protocol/nick"}).t(nickname).up().up();
+        pade.connection.send(msg);
+
+    } catch (e) {
+        console.error(e);
+    }
+}
+
 function handleInvitation(invite)
 {
     //console.log("handleInvitation", invite);

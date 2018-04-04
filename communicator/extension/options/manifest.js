@@ -200,6 +200,27 @@ this.manifest = {
         {
             "tab": i18n.get("ofmeet"),
             "group": i18n.get("config"),
+            "name": "recordAudio",
+            "type": "checkbox",
+            "label": i18n.get("Record Audio")
+        },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("config"),
+            "name": "recordVideo",
+            "type": "checkbox",
+            "label": i18n.get("Record Audio/Video")
+        },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("config"),
+            "name": "enableTranscription",
+            "type": "checkbox",
+            "label": i18n.get("Enable Voice-to-Text Transcription")
+        },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("config"),
             "name": "startBitrate",
             "type": "text",
             "label": i18n.get("Start Bitrate"),
@@ -227,6 +248,13 @@ this.manifest = {
             "name": "VERTICAL_FILMSTRIP",
             "type": "checkbox",
             "label": i18n.get("Enable Vertical Filmstrip")
+        },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("ui"),
+            "name": "CAPTIONS_SUBTITLES",
+            "type": "checkbox",
+            "label": i18n.get("Enable Captions/Sub Titles")
         },
         {
             "tab": i18n.get("ofmeet"),
