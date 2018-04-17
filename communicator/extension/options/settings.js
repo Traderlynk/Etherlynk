@@ -145,6 +145,17 @@ window.addEvent("domready", function () {
             }
         });
 
+        settings.manifest.enableVerto.addEvent("action", function ()
+        {
+            if (getSetting("enableVerto"))
+            {
+                background.addVertoMenu();
+
+            } else {
+               background.removeVertoMenu();
+            }
+        });
+
         settings.manifest.desktopShareMode.addEvent("action", function ()
         {
             background.reloadApp();

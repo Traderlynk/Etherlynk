@@ -366,10 +366,17 @@ this.manifest = {
         },
         {
             "tab": i18n.get("ofmeet"),
-            "group": i18n.get("SIP Phone"),
+            "group": i18n.get("Phone"),
             "name": "enableSip",
             "type": "checkbox",
             "label": i18n.get("Enable SIP Phone")
+        },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Phone"),
+            "name": "enableVerto",
+            "type": "checkbox",
+            "label": i18n.get("Enable Verto Communicator")
         },
         {
             "tab": i18n.get("ofmeet"),
