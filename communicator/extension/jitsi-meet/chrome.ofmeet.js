@@ -266,10 +266,13 @@ var ofmeet = (function(of)
             }
         });
 
-        if (APP.conference.roomName && OFMEET_CONFIG.isSwitchAvailable)
+        if (APP.conference.roomName)
         {
-            of.dialstring = APP.conference.roomName;
-            //connectSIP();
+            if (OFMEET_CONFIG.isSwitchAvailable)
+            {
+                of.dialstring = APP.conference.roomName;
+                //connectSIP();
+            }
 
             if (OFMEET_CONFIG.recordAudio || OFMEET_CONFIG.recordVideo)
             {
@@ -651,7 +654,7 @@ var ofmeet = (function(of)
 
         of.recognition.onerror = function(event)
         {
-            //console.error("Speech to text error", event);
+            console.error("Speech to text error", event);
         }
     }
 

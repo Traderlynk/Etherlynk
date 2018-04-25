@@ -198,6 +198,11 @@ window.addEventListener("load", function()
         return;
     }
 
+    pade.server = getSetting("server", null);
+    pade.domain = getSetting("domain", null);
+    pade.username = getSetting("username", null);
+    pade.password = getSetting("password", null);
+
     console.log("pade loaded");
 
     chrome.contextMenus.removeAll();
@@ -262,7 +267,7 @@ window.addEventListener("load", function()
         if (command == "activate_blogger_communicator" && getSetting("enableTouchPad", false)) openApcWindow();
         if (command == "activate_blogger_communicator" && !getSetting("enableTouchPad", false)) openBlogWindow();
 
-        if (command == "activate_phone" && getSetting("enableVerto", false)) openVertoWindow(true)
+        if (command == "activate_phone" && getSetting("enableVerto", false)) openVertoWindow()
         if (command == "activate_phone" && !getSetting("enableVerto", false)) openPhoneWindow(true)
 
         if (command == "activate_meeting") openVideoWindow(pade.activeContact.room);
@@ -276,6 +281,7 @@ window.addEventListener("load", function()
             if (win == -1) pade.minimised = true;
             if (win == pade.chatWindow.id) pade.minimised = false;
         }
+
         else
 
         if (pade.videoWindow)
@@ -291,7 +297,7 @@ window.addEventListener("load", function()
             if (win == pade.apcWindow.id) pade.minimised = false;
         }
 
-        //console.log("minimised", pade.minimised);
+        //console.log("minimised", win, pade.minimised, pade.chatWindow);
     });
 
     chrome.windows.onRemoved.addListener(function(win)
@@ -339,11 +345,6 @@ window.addEventListener("load", function()
             pade.minimised = false;
         }
     });
-
-    pade.server = getSetting("server", null);
-    pade.domain = getSetting("domain", null);
-    pade.username = getSetting("username", null);
-    pade.password = getSetting("password", null);
 
     chrome.browserAction.setBadgeBackgroundColor({ color: '#ff0000' });
     chrome.browserAction.setBadgeText({ text: 'off' });
@@ -719,18 +720,26 @@ function closeApcWindow()
     }
 }
 
-function openApcWindow()
+function openApcWindow(state)
 {
+    var data = {url: chrome.extension.getURL("apc.html"), type: "popup", focused: true};
+
+    if (state == "minimized")
+    {
+        delete data.focused;
+        data.state = state;
+    }
+
     if (pade.apcWindow == null)
     {
-        chrome.windows.create({url: chrome.extension.getURL("apc.html"), focused: true, type: "popup"}, function (win)
+        chrome.windows.create(data, function (win)
         {
             pade.apcWindow = win;
             chrome.windows.update(pade.apcWindow.id, {drawAttention: true, width: 820, height: 640});
         });
 
     } else {
-        chrome.windows.update(pade.apcWindow.id, {drawAttention: true, focused: true, width: 820, height: 640});
+        chrome.windows.update(pade.apcWindow.id, {drawAttention: true, focused: true});
     }
 }
 
@@ -743,20 +752,26 @@ function closePhoneWindow()
     }
 }
 
-function openPhoneWindow(focus)
+function openPhoneWindow(focus, state)
 {
-    var url = chrome.extension.getURL("phone/index-ext.html");
+    var data = {url: chrome.extension.getURL("phone/index-ext.html"), type: "popup", focused: focus};
+
+    if (state == "minimized")
+    {
+        delete data.focused;
+        data.state = state;
+    }
 
     if (pade.sip.window == null)
     {
-        chrome.windows.create({url: url, focused: focus, type: "popup"}, function (win)
+        chrome.windows.create(data, function (win)
         {
             pade.sip.window = win;
             chrome.windows.update(pade.sip.window.id, {drawAttention: focus, width: 350, height: 725});
         });
 
     } else {
-        chrome.windows.update(pade.sip.window.id, {drawAttention: true, width: 350, height: 725});
+        chrome.windows.update(pade.sip.window.id, {drawAttention: focus, focused: focus, width: 350, height: 725});
     }
 }
 
@@ -769,20 +784,28 @@ function closeChatWindow()
     }
 }
 
-function openChatWindow(url, update)
+function openChatWindow(url, update, state)
 {
+    var data = {url: chrome.extension.getURL(url), type: "popup", focused: true};
+
+    if (state == "minimized")
+    {
+        delete data.focused;
+        data.state = state;
+    }
+
     if (!pade.chatWindow || update)
     {
         if (update && pade.chatWindow != null) chrome.windows.remove(pade.chatWindow.id);
 
-        chrome.windows.create({url: chrome.extension.getURL(url), focused: true, type: "popup"}, function (win)
+        chrome.windows.create(data, function (win)
         {
             pade.chatWindow = win;
             chrome.windows.update(pade.chatWindow.id, {drawAttention: true, width: 1024, height: 800});
         });
 
     } else {
-        chrome.windows.update(pade.chatWindow.id, {drawAttention: true, focused: true, width: 1024, height: 800});
+        chrome.windows.update(pade.chatWindow.id, {drawAttention: true, focused: true});
     }
 }
 
@@ -810,10 +833,10 @@ function openVideoWindowUrl(url)
         chrome.windows.remove(pade.videoWindow.id);
     }
 
-    chrome.windows.create({url: url, width: 1024, height: 800, focused: true, type: "popup"}, function (win)
+    chrome.windows.create({url: url, focused: true, type: "popup"}, function (win)
     {
         pade.videoWindow = win;
-        chrome.windows.update(pade.videoWindow.id, {drawAttention: true});
+        chrome.windows.update(pade.videoWindow.id, {width: 1024, height: 800, drawAttention: true});
 
         sendToJabra("offhook");
     });
@@ -835,10 +858,10 @@ function openBlogWindow()
     {
         var url = "https://" + pade.server + "/" + getSetting("blogName", "solo") + "/admin-index.do#main";
 
-        chrome.windows.create({url: url, width: 1024, height: 800, focused: true, type: "popup"}, function (win)
+        chrome.windows.create({url: url, focused: true, type: "popup"}, function (win)
         {
             pade.blogWindow = win;
-            chrome.windows.update(pade.blogWindow.id, {drawAttention: true});
+            chrome.windows.update(pade.blogWindow.id, {width: 1024, height: 800, drawAttention: true});
         });
     } else {
         chrome.windows.update(pade.blogWindow.id, {drawAttention: true, focused: true, width: 1024, height: 800});
@@ -861,10 +884,10 @@ function openBlastWindow()
     {
         var url = "https://" + pade.server + "/dashboard/blast";
 
-        chrome.windows.create({url: url, width: 1024, height: 800, focused: true, type: "popup"}, function (win)
+        chrome.windows.create({url: url, focused: true, type: "popup"}, function (win)
         {
             pade.blastWindow = win;
-            chrome.windows.update(pade.blastWindow.id, {drawAttention: true});
+            chrome.windows.update(pade.blastWindow.id, {width: 1024, height: 800, drawAttention: true});
         });
     } else {
         chrome.windows.update(pade.blastWindow.id, {drawAttention: true, focused: true, width: 1024, height: 800});
@@ -881,19 +904,25 @@ function closeVertoWindow()
     }
 }
 
-function openVertoWindow()
+function openVertoWindow(state)
 {
+    var data = {url: "https://" + pade.server + "/dashboard/verto", type: "popup", focused: true};
+
+    if (state == "minimized")
+    {
+        delete data.focused;
+        data.state = state;
+    }
+
     if (!pade.vertoWindow)
     {
-        var url = "https://" + pade.server + "/dashboard/verto";
-
-        chrome.windows.create({url: url, width: 1024, height: 800, focused: true, type: "popup"}, function (win)
+        chrome.windows.create(data, function (win)
         {
             pade.vertoWindow = win;
-            chrome.windows.update(pade.vertoWindow.id, {drawAttention: true});
+            chrome.windows.update(pade.vertoWindow.id, {width: 1024, height: 800, drawAttention: true});
         });
     } else {
-        chrome.windows.update(pade.vertoWindow.id, {drawAttention: true, focused: true, width: 1024, height: 800});
+        chrome.windows.update(pade.vertoWindow.id, {drawAttention: true, focused: true});
     }
 }
 
@@ -1241,6 +1270,12 @@ function fetchContacts(callback)
                 {
                     openPhoneWindow(true);
                 }});
+
+                if (getSetting("sipAutoStart", false))
+                {
+                    // chrome bug, window not resized
+                    //openPhoneWindow(true, "minimized");
+                }
             }
 
         }, function (error) {
@@ -1590,6 +1625,11 @@ function addInverseMenu()
         {
             openChatWindow("inverse/index.html");
         }});
+
+        if (getSetting("converseAutoStart", false))
+        {
+            openChatWindow("inverse/index.html", null, "minimized");
+        }
     }
 }
 
@@ -1641,6 +1681,11 @@ function addVertoMenu()
         {
             openVertoWindow();
         }});
+
+        if (getSetting("sipAutoStart", false))
+        {
+            openVertoWindow("minimized");
+        }
     }
 }
 
@@ -1658,6 +1703,11 @@ function addTouchPadMenu()
         {
             openApcWindow();
         }});
+
+        if (getSetting("touchPadAutoStart", false))
+        {
+            openApcWindow("minimized");
+        }
     }
 }
 

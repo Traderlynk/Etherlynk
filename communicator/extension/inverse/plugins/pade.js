@@ -22,6 +22,7 @@
         moment = converse.env.moment;
 
      var _converse = null;
+     var padeReady = false;
 
     // The following line registers your plugin.
     converse.plugins.add("pade", {
@@ -181,6 +182,54 @@
                 },
 
                 renderMessage: function renderMessage(attrs) {
+                    //console.log("render", attrs, this.model);
+
+                    var id = this.model.attributes.id;
+                    var text = attrs.fullname + " says " + attrs.message;
+                    var room = this.model.attributes.jid + "<br/>" + this.model.attributes.description;
+
+                    var notifyMe = function()
+                    {
+                        _converse.playSoundNotification();
+
+                        bgWindow.notifyText(text, room, null, [{title: "Show Conversation?", iconUrl: chrome.extension.getURL("success-16x16.gif")}], function(notificationId, buttonIndex)
+                        {
+                            if (buttonIndex == 0)
+                            {
+                                bgWindow.openChatWindow("inverse/index.html");
+                            }
+
+                        }, id);
+                    }
+
+                    if (bgWindow.pade.minimised)
+                    {
+                        if (getSetting("notifyAllRoomMessages", false))
+                        {
+                            notifyMe();
+                        }
+
+                        if (getSetting("notifyOnInterests", false))
+                        {
+                            var interestList = (getSetting("username", "") + "," + getSetting("interestList", "")).split(",");
+                            var foundInterest = false;
+
+                            for (var i=0; i<interestList.length; i++)
+                            {
+                                if (interestList[i] != "")
+                                {
+                                    var searchRegExp = new RegExp('^(.*)(\s?' + interestList[i] + ')', 'ig');
+
+                                    if (searchRegExp.test(attrs.message))
+                                    {
+                                        notifyMe();
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     return this.__super__.renderMessage.apply(this, arguments);
                 },
 

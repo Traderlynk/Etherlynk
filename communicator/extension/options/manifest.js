@@ -162,13 +162,6 @@ this.manifest = {
             "type": "checkbox",
             "label": i18n.get("Audioconference Only")
         },
-        {
-            "tab": i18n.get("general"),
-            "group": i18n.get("Preferences"),
-            "name": "enableTouchPad",
-            "type": "checkbox",
-            "label": i18n.get("Enable Communicator TouchPad")
-        },
         {                                                   // ofmeet config
             "tab": i18n.get("ofmeet"),
             "group": i18n.get("config"),
@@ -272,12 +265,26 @@ this.manifest = {
             "label": i18n.get("Filmstrip Maximium Height"),
             "text": i18n.get("80"),
         },
+        {                                       // touchpad
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("TouchPad"),
+            "name": "enableTouchPad",
+            "type": "checkbox",
+            "label": i18n.get("Enable Communicator TouchPad")
+        },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("TouchPad"),
+            "name": "touchPadAutoStart",
+            "type": "checkbox",
+            "label": i18n.get("Auto Start Communicator Touchpad")
+        },
         {                                      // candy chat
             "tab": i18n.get("ofmeet"),
             "group": i18n.get("Candy Chat"),
             "name": "enableChat",
             "type": "checkbox",
-            "label": i18n.get("Enable Candy Chat")
+            "label": i18n.get("Enable Candy")
         },
         {
             "tab": i18n.get("ofmeet"),
@@ -303,16 +310,16 @@ this.manifest = {
         {
             "tab": i18n.get("ofmeet"),
             "group": i18n.get("Converse"),
-            "name": "converseDebug",
+            "name": "converseAutoStart",
             "type": "checkbox",
-            "label": i18n.get("Enable Debug")
+            "label": i18n.get("Auto Start Converse")
         },
         {
             "tab": i18n.get("ofmeet"),
             "group": i18n.get("Converse"),
-            "name": "notifyAllRoomMessages",
+            "name": "converseDebug",
             "type": "checkbox",
-            "label": i18n.get("Notify all room messages")
+            "label": i18n.get("Enable Debug")
         },
         {
             "tab": i18n.get("ofmeet"),
@@ -341,6 +348,28 @@ this.manifest = {
             "name": "allowNonRosterMessaging",
             "type": "checkbox",
             "label": i18n.get("Allow non roster messaging")
+        },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Converse"),
+            "name": "notifyAllRoomMessages",
+            "type": "checkbox",
+            "label": i18n.get("Notify all room messages")
+        },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Converse"),
+            "name": "notifyOnInterests",
+            "type": "checkbox",
+            "label": i18n.get("Notify on any interest")
+        },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Converse"),
+            "name": "interestList",
+            "type": "text",
+            "label": i18n.get("Interests"),
+            "text": i18n.get("List of coma seperated interest words. For example, xmpp, sip"),
         },
         {                                       // blogger
             "tab": i18n.get("ofmeet"),
@@ -377,6 +406,13 @@ this.manifest = {
             "name": "enableVerto",
             "type": "checkbox",
             "label": i18n.get("Enable Verto Communicator")
+        },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Phone"),
+            "name": "sipAutoStart",
+            "type": "checkbox",
+            "label": i18n.get("Auto Start Phone")
         },
         {
             "tab": i18n.get("ofmeet"),
