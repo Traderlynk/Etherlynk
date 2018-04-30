@@ -371,6 +371,57 @@ this.manifest = {
             "label": i18n.get("Interests"),
             "text": i18n.get("List of coma seperated interest words. For example, xmpp, sip"),
         },
+        {                                       // hosted web apps
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Hosted Apps"),
+            "name": "enableOffice365Business",
+            "type": "checkbox",
+            "label": i18n.get("Enable Office 365 Business")
+        },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Hosted Apps"),
+            "name": "enableOffice365Personal",
+            "type": "checkbox",
+            "label": i18n.get("Enable Office 365 Personal")
+        },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Hosted Apps"),
+            "name": "of365AutoStart",
+            "type": "checkbox",
+            "label": i18n.get("Auto Start Hosted Apps")
+        },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Hosted Apps"),
+            "name": "enableWebApps",
+            "type": "checkbox",
+            "label": i18n.get("Enable Web Apps")
+        },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Hosted Apps"),
+            "name": "webApps",
+            "type": "text",
+            "label": i18n.get("Web Apps"),
+            "text": i18n.get("Enter list of web app urls"),
+        },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Hosted Apps"),
+            "name": "enableGmail",
+            "type": "checkbox",
+            "label": i18n.get("Enable Gmail")
+        },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Hosted Apps"),
+            "name": "gmailAccounts",
+            "type": "text",
+            "label": i18n.get("Gmail"),
+            "text": i18n.get("Enter list of email accounts"),
+        },
         {                                       // blogger
             "tab": i18n.get("ofmeet"),
             "group": i18n.get("Blogger"),

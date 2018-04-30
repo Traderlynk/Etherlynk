@@ -107,6 +107,50 @@ window.addEvent("domready", function () {
             }
         });
 
+        settings.manifest.enableOffice365Business.addEvent("action", function ()
+        {
+            if (getSetting("enableOffice365Business"))
+            {
+                background.addOffice365Business();
+
+            } else {
+               background.removeOffice365Business();
+            }
+        });
+
+        settings.manifest.enableOffice365Personal.addEvent("action", function ()
+        {
+            if (getSetting("enableOffice365Personal"))
+            {
+                background.addOffice365Personal();
+
+            } else {
+               background.removeOffice365Personal();
+            }
+        });
+
+        settings.manifest.enableWebApps.addEvent("action", function ()
+        {
+            if (getSetting("enableWebApps"))
+            {
+                background.addWebApps();
+
+            } else {
+               background.removeWebApps();
+            }
+        });
+
+        settings.manifest.enableGmail.addEvent("action", function ()
+        {
+            if (getSetting("enableGmail"))
+            {
+                background.addGmail();
+
+            } else {
+               background.removeGmail();
+            }
+        });
+
         settings.manifest.enableSip.addEvent("action", function ()
         {
             background.reloadApp();
@@ -286,6 +330,9 @@ function doDefaults()
     setSetting("allowNonRosterMessaging", true);
     setSetting("rosterGroups", true);
     setSetting("autoReconnect", true);
+
+    // web apps
+    setSetting("webApps", "web.skype.com, web.whatsapp.com");
 }
 
 function setDefaultPassword(settings)
