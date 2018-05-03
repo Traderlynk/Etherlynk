@@ -371,6 +371,14 @@ this.manifest = {
             "label": i18n.get("Interests"),
             "text": i18n.get("List of coma seperated interest words. For example, xmpp, sip"),
         },
+        {
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("Converse"),
+            "name": "ofmeetInvitation",
+            "type": "text",
+            "label": i18n.get("Invitation"),
+            "text": i18n.get("Please join meeting at"),
+        },
         {                                       // hosted web apps
             "tab": i18n.get("ofmeet"),
             "group": i18n.get("Hosted Apps"),

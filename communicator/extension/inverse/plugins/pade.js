@@ -71,6 +71,7 @@
                     'call': true,
                     'clear': true
                 },
+                ofmeet_invitation: getSetting("ofmeetInvitation", 'Please join meeting at'),
                 hide_open_bookmarks: false
             });
 
@@ -174,10 +175,11 @@
                 toggleCall: function toggleCall(ev) {
                     ev.stopPropagation();
 
-                    var room = this.model.attributes.name || Strophe.getNodeFromJid(this.model.attributes.jid);
+                    Strophe.getNodeFromJid(this.model.attributes.jid) + Math.random().toString(36).substr(2,9);
+                    var url = "https://" + _converse.api.settings.get("bosh_service_url").split("/")[2] + "/ofmeet/" + room;
                     console.log('callButtonClicked', {connection: _converse.connection,  room});
 
-                    this.onMessageSubmitted("https://" + bgWindow.pade.server + "/ofmeet/" + room);
+                    this.onMessageSubmitted(_converse.api.settings.get("ofmeet_invitation") + ' ' + url);
                     bgWindow.openVideoWindow(room);
                 },
 
@@ -238,21 +240,21 @@
 
                     var result = this.__super__.renderToolbar.apply(this, arguments);
 
-                    var dropZone = this.$el.find('.chat-body')[0];
+                    var dropZone = $(this.el).find('.chat-body')[0];
                     dropZone.removeEventListener('dragover', handleDragOver);
                     dropZone.removeEventListener('drop', handleDropFileSelect);
                     dropZone.addEventListener('dragover', handleDragOver, false);
                     dropZone.addEventListener('drop', handleDropFileSelect, false);
 
                     var id = this.model.get("box_id");
-                    var html = '<li title="Upload"><input id="file-' + id + '" type="file" name="files[]" multiple /></li>';
-                    var upload = this.$el.find('.toggle-call').after(html);
+
+                    var html = '<li title="Upload"><label class="custom-file-upload"><input id="file-' + id + '" type="file" name="files[]" multiple /><i class="icon-attachment"></i></label></li>';
+                    $(this.el).find('.toggle-call').after(html);
 
                     setTimeout(function()
                     {
                         var fileButton = document.getElementById("file-" + id);
                         fileButton.addEventListener('change', doUpload, false);
-
                     });
 
                     return result;
