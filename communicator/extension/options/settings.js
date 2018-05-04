@@ -1,4 +1,23 @@
+var uportWin = null;
+
+window.addEventListener("unload", function ()
+{
+    if (uportWin)
+    {
+        chrome.windows.remove(uportWin.id);
+        uportWin = null;
+    }
+});
+
 window.addEvent("domready", function () {
+
+    chrome.windows.onRemoved.addListener(function(win)
+    {
+        if (uportWin && win == uportWin.id)
+        {
+            uportWin = null;
+        }
+    });
 
     document.getElementById("settings-label").innerHTML = chrome.i18n.getMessage('manifest_shortExtensionName')
 
@@ -221,6 +240,26 @@ window.addEvent("domready", function () {
                 {
                     chrome.windows.update(win.id, {drawAttention: true, width: 380, height: 270});
                 });
+            }
+        });
+
+        settings.manifest.uport.addEvent("action", function ()
+        {
+            if (getSetting("useUport"))
+            {
+                if (uportWin)
+                {
+                    chrome.windows.update(uportWin.id, {drawAttention: true, focused: true});
+
+                } else {
+                    var url = chrome.extension.getURL("uport/index.html");
+
+                    chrome.windows.create({url: url, focused: true, type: "popup"}, function (win)
+                    {
+                        uportWin = win;
+                        chrome.windows.update(win.id, {drawAttention: true, width: 450, height: 550});
+                    });
+                }
             }
         });
 

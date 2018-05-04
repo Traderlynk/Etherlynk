@@ -3,7 +3,7 @@ this.manifest = {
     "icon": "../icon.png",
     "settings": [
         {
-            "tab": i18n.get("general"),
+            "tab": i18n.get("connection"),
             "group": i18n.get("connection"),
             "name": "server",
             "type": "text",
@@ -11,7 +11,7 @@ this.manifest = {
             "text": "server name:port"
         },
         {
-            "tab": i18n.get("general"),
+            "tab": i18n.get("connection"),
             "group": i18n.get("connection"),
             "name": "domain",
             "type": "text",
@@ -19,42 +19,56 @@ this.manifest = {
             "text": "domain name"
         },
         {
-            "tab": i18n.get("general"),
+            "tab": i18n.get("connection"),
             "group": i18n.get("connection"),
             "name": "useWebsocket",
             "type": "checkbox",
             "label": i18n.get("Use Websockets")
         },
         {
-            "tab": i18n.get("general"),
+            "tab": i18n.get("connection"),
+            "group": i18n.get("uPort"),
+            "name": "useUport",
+            "type": "checkbox",
+            "label": i18n.get("Decentralized Identity for Ethereum")
+        },
+        {
+            "tab": i18n.get("connection"),
+            "group": i18n.get("uPort"),
+            "name": "uport",
+            "type": "button",
+            "text": i18n.get("Register (QR Code)")
+        },
+        {
+            "tab": i18n.get("connection"),
             "group": i18n.get("TOTP"),
             "name": "useTotp",
             "type": "checkbox",
             "label": i18n.get("Time based One-Time Password - Use OfChat and FreeOTP or Google Authernticator App")
         },
         {
-            "tab": i18n.get("general"),
+            "tab": i18n.get("connection"),
             "group": i18n.get("TOTP"),
             "name": "qrcode",
             "type": "button",
             "text": i18n.get("QR Code")
         },
         {
-            "tab": i18n.get("general"),
+            "tab": i18n.get("connection"),
             "group": i18n.get("Certificate"),
             "name": "useClientCert",
             "type": "checkbox",
             "label": i18n.get("Use Client Certificate (No password required)")
         },
         {
-            "tab": i18n.get("general"),
+            "tab": i18n.get("connection"),
             "group": i18n.get("Certificate"),
             "name": "certificate",
             "type": "button",
             "text": i18n.get("Download")
         },
         {
-            "tab": i18n.get("general"),
+            "tab": i18n.get("connection"),
             "group": i18n.get("login"),
             "name": "displayname",
             "type": "text",
@@ -62,7 +76,7 @@ this.manifest = {
             "text": i18n.get("x_characters")
         },
         {
-            "tab": i18n.get("general"),
+            "tab": i18n.get("connection"),
             "group": i18n.get("login"),
             "name": "username",
             "type": "text",
@@ -70,7 +84,7 @@ this.manifest = {
             "text": i18n.get("x_characters")
         },
         {
-            "tab": i18n.get("general"),
+            "tab": i18n.get("connection"),
             "group": i18n.get("login"),
             "name": "password",
             "type": "text",
@@ -79,14 +93,14 @@ this.manifest = {
             "masked": true
         },
         {
-            "tab": i18n.get("general"),
+            "tab": i18n.get("connection"),
             "group": i18n.get("login"),
             "name": "connect",
             "type": "button",
             "text": i18n.get("login")
         },
         {
-            "tab": i18n.get("general"),
+            "tab": i18n.get("connection"),
             "group": i18n.get("login"),
             "name": "status",
             "text": i18n.get(""),

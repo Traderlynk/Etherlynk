@@ -1,6 +1,18 @@
 var pade = {gmailWindow: [], webAppsWindow: []}
 var callbacks = {}
 
+// uPort
+
+function uportRequestedCredentials(creds)
+{
+    console.log("uportRequestedCredentials", creds.publicEncKey, creds.address, creds.name);
+}
+
+function uportError(error)
+{
+    console.error("uportError", error);
+}
+
 // strophe SASL
 
 if (getSetting("useClientCert", false))
