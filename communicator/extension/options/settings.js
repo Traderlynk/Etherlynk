@@ -26,8 +26,12 @@ window.addEvent("domready", function () {
     new FancySettings.initWithManifest(function (settings)
     {
         var background = chrome.extension.getBackgroundPage();
+        var avatar = getSetting("avatar");
 
-        if (background.pade.avatar) document.getElementById("avatar").innerHTML = "<img src='" + background.pade.avatar + "' />";
+        if (avatar)
+        {
+            document.getElementById("avatar").innerHTML = "<img style='width: 64px;' src='" + avatar + "' />";
+        }
 
         settings.manifest.uploadAvatar.element.innerHTML = "<input id='uploadAvatar' type='file' name='files[]'>";
 
@@ -257,7 +261,7 @@ window.addEvent("domready", function () {
                     chrome.windows.create({url: url, focused: true, type: "popup"}, function (win)
                     {
                         uportWin = win;
-                        chrome.windows.update(win.id, {drawAttention: true, width: 450, height: 550});
+                        chrome.windows.update(win.id, {drawAttention: true, width: 500, height: 600});
                     });
                 }
             }
@@ -473,6 +477,8 @@ function uploadApplication(event, settings)
 
 function uploadAvatar(event, settings)
 {
+    settings.manifest.uploadAvatarStatus.element.innerHTML = "Please wait...";
+
     var files = event.target.files;
     var background = chrome.extension.getBackgroundPage();
 
@@ -491,18 +497,32 @@ function uploadAvatar(event, settings)
                 dataUri = event.target.result;
                 console.log("uploadAvatar", dataUri);
 
-                background.getVCard(jid, function(vCard)
-                {
-                    console.log("uploadAvatar - get vcard", vCard);
-                    vCard.avatar = dataUri;
+                window.localStorage["store.settings.avatar"] = JSON.stringify(dataUri);
 
-                    background.setVCard(vCard, function(resp)
+                var sourceImage = new Image();
+
+                sourceImage.onload = function() {
+                    var canvas = document.createElement("canvas");
+                    canvas.width = 32;
+                    canvas.height = 32;
+                    canvas.getContext("2d").drawImage(sourceImage, 0, 0, 32, 32);
+
+                    background.getVCard(jid, function(vCard)
                     {
-                        console.log("uploadAvatar - set vcard", resp);
-                        settings.manifest.uploadAvatarStatus.element.innerHTML = '<b>image uploaded ok</b>';
+                        console.log("uploadAvatar - get vcard", vCard);
+                        vCard.avatar = canvas.toDataURL();
+
+                        background.setVCard(vCard, function(resp)
+                        {
+                            console.log("uploadAvatar - set vcard", resp);
+                            setTimeout(function() {location.reload();}, 500);
+
+                        }, avatarError);
 
                     }, avatarError);
-                }, avatarError);
+                }
+
+                sourceImage.src = dataUri;
             };
 
             reader.onerror = function(event) {

@@ -37,7 +37,7 @@ this.manifest = {
             "group": i18n.get("uPort"),
             "name": "uport",
             "type": "button",
-            "text": i18n.get("Register (QR Code)")
+            "text": i18n.get("QR Code")
         },
         {
             "tab": i18n.get("connection"),
@@ -105,6 +105,30 @@ this.manifest = {
             "name": "status",
             "text": i18n.get(""),
             "type": "description"
+        },
+        {
+            "tab": i18n.get("general"),
+            "group": i18n.get("contact"),
+            "name": "email",
+            "type": "text",
+            "label": i18n.get("email"),
+            "text": "name@domain"
+        },
+        {
+            "tab": i18n.get("general"),
+            "group": i18n.get("contact"),
+            "name": "phone",
+            "type": "text",
+            "label": i18n.get("phone"),
+            "text": "+447925488496"
+        },
+        {
+            "tab": i18n.get("general"),
+            "group": i18n.get("contact"),
+            "name": "country",
+            "type": "text",
+            "label": i18n.get("country"),
+            "text": "Country code: GB, US"
         },
         {
             "tab": i18n.get("general"),
@@ -588,6 +612,11 @@ this.manifest = {
             "username",
             "displayname",
             "password"
+        ],
+        [
+            "email",
+            "phone",
+            "country"
         ],
         [
             "startBitrate",

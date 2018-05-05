@@ -266,6 +266,7 @@ window.addEventListener("load", function()
     pade.domain = getSetting("domain", null);
     pade.username = getSetting("username", null);
     pade.password = getSetting("password", null);
+    pade.avatar = getSetting("avatar", null);
 
     console.log("pade loaded");
 
@@ -1404,24 +1405,6 @@ function fetchContacts(callback)
 
         })
 
-
-    }, function (error) {
-        console.error(error);
-    });
-
-    pade.connection.sendIQ($iq({type: "get"}).c("vCard", {xmlns: "vcard-temp"}).tree(), function(resp)
-    {
-        var vCard = $(resp).find("vCard");
-        var img = vCard.find('BINVAL').text();
-        var type = vCard.find('TYPE').text();
-        var img_src = 'data:'+type+';base64,'+img;
-
-        //console.log("get vcard", img_src);
-
-        if (img_src != 'data:;base64,')
-        {
-            pade.avatar = img_src;
-        }
 
     }, function (error) {
         console.error(error);
