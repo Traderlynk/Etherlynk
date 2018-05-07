@@ -30,7 +30,7 @@ this.manifest = {
             "group": i18n.get("uPort"),
             "name": "useUport",
             "type": "checkbox",
-            "label": i18n.get("Decentralized Identity for Ethereum")
+            "label": i18n.get("Open Identity System for the Decentralized Web")
         },
         {
             "tab": i18n.get("connection"),

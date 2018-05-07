@@ -175,7 +175,7 @@
                 toggleCall: function toggleCall(ev) {
                     ev.stopPropagation();
 
-                    Strophe.getNodeFromJid(this.model.attributes.jid) + Math.random().toString(36).substr(2,9);
+                    var room = Strophe.getNodeFromJid(this.model.attributes.jid) + Math.random().toString(36).substr(2,9);
                     var url = "https://" + _converse.api.settings.get("bosh_service_url").split("/")[2] + "/ofmeet/" + room;
                     console.log('callButtonClicked', {connection: _converse.connection,  room});
 

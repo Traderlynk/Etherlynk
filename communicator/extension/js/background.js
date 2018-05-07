@@ -532,6 +532,8 @@ window.addEventListener("load", function()
                     {
                         handleContact(contact);
                     });
+
+                    updateAvatar();
                 });
             }
             else
@@ -2066,4 +2068,45 @@ function setVCard(vCard, callback, errorback)
     });
 }
 
+function updateAvatar()
+{
+    console.log("updateAvatar");
 
+    var avatar = getSetting("avatar", null);
+
+    if (avatar)
+    {
+        var avatarError = function (error)
+        {
+            console.error("uploadAvatar - error", error);
+        }
+
+        var jid = pade.username + "@" + pade.domain;
+
+        getVCard(jid, function(vCard)
+        {
+            if (!vCard.avatar || vCard.avatar == "")
+            {
+                var sourceImage = new Image();
+
+                sourceImage.onload = function() {
+                    var canvas = document.createElement("canvas");
+                    canvas.width = 32;
+                    canvas.height = 32;
+                    canvas.getContext("2d").drawImage(sourceImage, 0, 0, 32, 32);
+
+                    vCard.avatar = canvas.toDataURL();
+
+                    setVCard(vCard, function(resp)
+                    {
+                        console.log("uploadAvatar - set vcard", resp);
+
+                    }, avatarError);
+                }
+
+                sourceImage.src = credentials.avatar.uri;
+            }
+
+        }, avatarError);
+    }
+}

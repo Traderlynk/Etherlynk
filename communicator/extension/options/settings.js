@@ -261,7 +261,7 @@ window.addEvent("domready", function () {
                     chrome.windows.create({url: url, focused: true, type: "popup"}, function (win)
                     {
                         uportWin = win;
-                        chrome.windows.update(win.id, {drawAttention: true, width: 500, height: 600});
+                        chrome.windows.update(win.id, {drawAttention: true, width: 500, height: 650});
                     });
                 }
             }
