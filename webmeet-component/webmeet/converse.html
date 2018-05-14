@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="shortcut icon" type="image/png" href="image.png"/>
+    <link type="text/css" rel="stylesheet" media="screen" href="css/bootstrap.min.css" />
+    <link type="text/css" rel="stylesheet" media="screen" href="css/font-awesome.min.css" />
+    <link type="text/css" rel="stylesheet" media="screen" href="css/theme.css" />
+    <link type="text/css" rel="stylesheet" media="screen" href="css/converse.css" />
+
+    <script src="dist/jquery.min.js"></script>
+    <script src="dist/uport-connect.js"></script>
+    <script src="dist/webmeet.js"></script>
+    <script src="dist/converse.js"></script>
+    <script src="plugins/webmeet.js"></script>
+    <style>
+        #uport-wrapper {
+            zoom: 0.8;
+        }
+    </style>
+</head>
+
+<body style="margin-left: 0.05em; background-color: #ddd;">
+ <img id="loader" style="display: none;" src="ajax-loader.gif" />
+ <div id="conversejs"></div>
+ <iframe id="jitsimeet" allow="microphone; camera;" frameborder="0" seamless="seamless" allowfullscreen="true" scrolling="no" style="z-index: 2147483647;display:none;width:100%;height:-webkit-fill-available;"></iframe>
+</body>
+
+<script>
+    var config = {
+        authentication: 'anonymous',
+        auto_login: true,
+        auto_join_rooms: [
+            'lobby@conference.' + location.hostname,
+        ],
+        play_sounds: true,
+        sounds_path: "sounds/",
+        notification_icon: "image.png",
+        muc_domain: "conference." + location.hostname,
+        domain_placeholder: location.hostname,
+        registration_domain: location.hostname,
+        locked_domain: location.hostname,
+        whitelisted_plugins: ["webmeet"],
+        bosh_service_url: 'https://' + location.host + '/http-bind/',
+        websocket_url: 'wss://' + location.host + '/ws/',
+        jid: location.hostname,
+        notify_all_room_messages: true,
+        auto_reconnect: true,
+        allow_non_roster_messaging: true,
+        view_mode: 'embedded',
+        webmeet_invitation: 'Please join meeting at:',
+        ofswitch: false,
+        uport: false
+    };
+</script>
+</html>

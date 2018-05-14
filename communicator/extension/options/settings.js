@@ -369,7 +369,6 @@ function doDefaults()
 
     // converse
     setSetting("enableInverse", true);
-    setSetting("notifyAllRoomMessages", true);
     setSetting("allowNonRosterMessaging", true);
     setSetting("rosterGroups", true);
     setSetting("autoReconnect", true);
