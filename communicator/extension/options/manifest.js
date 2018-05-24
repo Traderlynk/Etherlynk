@@ -41,6 +41,14 @@ this.manifest = {
         },
         {
             "tab": i18n.get("connection"),
+            "group": i18n.get("uPort"),
+            "name": "uportPermission",
+            "type": "text",
+            "label": i18n.get("permission"),
+            "text": i18n.get("uport_permission")
+        },
+        {
+            "tab": i18n.get("connection"),
             "group": i18n.get("TOTP"),
             "name": "useTotp",
             "type": "checkbox",
@@ -205,6 +213,13 @@ this.manifest = {
         {
             "tab": i18n.get("general"),
             "group": i18n.get("Preferences"),
+            "name": "enableRemoteControl",
+            "type": "checkbox",
+            "label": i18n.get("Enable Remote Control")
+        },
+        {
+            "tab": i18n.get("general"),
+            "group": i18n.get("Preferences"),
             "name": "useJabra",
             "type": "checkbox",
             "label": i18n.get("Use Jabra Speakerphone (Models 410, 510, 710 & 810)")
@@ -212,9 +227,23 @@ this.manifest = {
         {
             "tab": i18n.get("general"),
             "group": i18n.get("Preferences"),
+            "name": "useStreamDeck",
+            "type": "checkbox",
+            "label": i18n.get("Use Stream Deck as a TouchPad")
+        },
+        {
+            "tab": i18n.get("general"),
+            "group": i18n.get("Preferences"),
             "name": "audioOnly",
             "type": "checkbox",
             "label": i18n.get("Audioconference Only")
+        },
+        {
+            "tab": i18n.get("general"),
+            "group": i18n.get("Preferences"),
+            "name": "registerUrlProtocols",
+            "type": "checkbox",
+            "label": i18n.get("Register Url Protocols im: (chat) and xmpp: (meeting)")
         },
         {                                                   // ofmeet config
             "tab": i18n.get("ofmeet"),
@@ -233,16 +262,16 @@ this.manifest = {
         {
             "tab": i18n.get("ofmeet"),
             "group": i18n.get("config"),
-            "name": "startWithAudioMuted",
+            "name": "p2pMode",
             "type": "checkbox",
-            "label": i18n.get("Start with Audio Muted")
+            "label": i18n.get("Enable P2P Mode")
         },
         {
             "tab": i18n.get("ofmeet"),
             "group": i18n.get("config"),
-            "name": "startWithVideoMuted",
+            "name": "startWithAudioMuted",
             "type": "checkbox",
-            "label": i18n.get("Start with Video Muted")
+            "label": i18n.get("Start with Audio Muted")
         },
         {
             "tab": i18n.get("ofmeet"),
@@ -506,7 +535,14 @@ this.manifest = {
             "type": "checkbox",
             "label": i18n.get("Enable Message Blast")
         },
-        {
+        {                                       // a/v capture
+            "tab": i18n.get("ofmeet"),
+            "group": i18n.get("A/V Capture"),
+            "name": "enableAVCapture",
+            "type": "checkbox",
+            "label": i18n.get("Enable Audio/Video Capture")
+        },
+        {                                       // sip phone
             "tab": i18n.get("ofmeet"),
             "group": i18n.get("Phone"),
             "name": "enableSip",
@@ -622,6 +658,7 @@ this.manifest = {
     "alignment": [
         [
             "server",
+            "uportPermission",
             "domain"
         ],
         [

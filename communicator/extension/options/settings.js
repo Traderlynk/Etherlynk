@@ -212,6 +212,17 @@ window.addEvent("domready", function () {
             }
         });
 
+        settings.manifest.enableAVCapture.addEvent("action", function ()
+        {
+            if (getSetting("enableAVCapture"))
+            {
+                background.addAVCaptureMenu();
+
+            } else {
+               background.removeAVCaptureMenu();
+            }
+        });
+
         settings.manifest.enableVerto.addEvent("action", function ()
         {
             if (getSetting("enableVerto"))
@@ -247,6 +258,13 @@ window.addEvent("domready", function () {
             }
         });
 
+
+        settings.manifest.registerUrlProtocols.addEvent("action", function ()
+        {
+            navigator.registerProtocolHandler("im",  chrome.extension.getURL("inverse/index.html?url=%s"), "Pade - Conversation");
+            navigator.registerProtocolHandler("xmpp",  chrome.extension.getURL("inverse/index.html?url=%s"), "Pade - Meeting");
+        });
+
         settings.manifest.uport.addEvent("action", function ()
         {
             if (getSetting("useUport"))
@@ -261,7 +279,7 @@ window.addEvent("domready", function () {
                     chrome.windows.create({url: url, focused: true, type: "popup"}, function (win)
                     {
                         uportWin = win;
-                        chrome.windows.update(win.id, {drawAttention: true, width: 500, height: 650});
+                        chrome.windows.update(win.id, {drawAttention: true, width: 500, height: 700});
                     });
                 }
             }
@@ -346,6 +364,9 @@ window.addEvent("domready", function () {
 
 function doDefaults()
 {
+    // connection
+    setSetting("uportPermission", chrome.i18n.getMessage("uport_permission"));
+
     // preferences
     setSetting("popupWindow", true);
     setSetting("enableLipSync", false);

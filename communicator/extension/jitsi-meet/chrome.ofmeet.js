@@ -7,6 +7,9 @@ var ofmeet = (function(of)
     var firstTime = true;
     var firstTrack = true;
     var participants = {}
+    var largeVideo = null;
+    var remoteController = null;
+    var remoteControlPort = null;
 
     function setup()
     {
@@ -19,10 +22,42 @@ var ofmeet = (function(of)
         }
         __init();
 
-
         window.addEventListener('message', function (event)
         {
             //console.log("addListener message", event.data);
+
+            // messages from remote control
+            // {"postis":true,"scope":"jitsi-remote-control","method":"message","params":{"type":"request","data":{"name":"remote-control","type":"start","sourceId":"8Ppvxxlv3Zgncd5uiKx6zA=="},"id":1}}
+            // {"postis":true,"scope":"jitsi-remote-control","method":"message","params":{"type":"event","data":{"name":"remote-control","type":"stop"}}}
+
+            if (event.data.indexOf("jitsi-remote-control") > -1)
+            {
+                var eventData = JSON.parse(event.data);
+
+                if (eventData)
+                {
+                    var data = eventData.params.data;
+
+                    if (data.type == "start" && remoteController != null)
+                    {
+                        console.log("addListener start", data);
+
+                        APP.remoteControl.receiver.sendRemoteControlEndpointMessage(remoteController._id, {
+                            type: "permissions",
+                            action: remoteControlPort ? "grant" : "deny"
+                        })
+                    }
+                    else
+
+                    if (data.type == "stop")
+                    {
+                        remoteController = null;
+                    }
+                }
+
+            }
+
+            // these are messages from the collaboration app in the shadow DOM content page
 
             if (APP && APP.connection && OFMEET_CONFIG.bgWin && OFMEET_CONFIG.bgWin.pade.activeUrl && event.data)
             {
@@ -43,7 +78,10 @@ var ofmeet = (function(of)
 
                 if (event.data.event == "ofmeet.event.url.ready")
                 {
-                    console.log("addListener message collab", event.data);
+                    //console.log("addListener message collab", event.data);
+
+                    // Starts here. When content page is ready and we have content to share,
+                    // we start mouse/key event feed
 
                     if (OFMEET_CONFIG.documentOwner)
                     {
@@ -75,6 +113,8 @@ var ofmeet = (function(of)
             $(message).find('ofmeet').each(function ()
             {
                 try {
+                    // these are messages from ofchat
+
                     var json = JSON.parse($(this).text());
 
                     if (json.event == "ofmeet.event.sip.join")
@@ -89,9 +129,11 @@ var ofmeet = (function(of)
                     }
                     else
 
+                    // these are p2p messages from users collaborating
+
                     if (json.event == "ofmeet.event.pdf.goto" || json.event == "ofmeet.event.pdf.ready" || json.event == "ofmeet.event.url.ready")
                     {
-                        console.log("ofmeet.js document share", json);
+                        //console.log("ofmeet.js document share", json);
 
                         var url = json.url;
 
@@ -150,7 +192,7 @@ var ofmeet = (function(of)
 
                         if (ofMeetContent && (OFMEET_CONFIG.showSharedCursor || !OFMEET_CONFIG.showSharedCursor && json.from != OFMEET_CONFIG.nickName))
                         {
-                            console.log("ofmeet.event.pdf.message", json);
+                            //console.log("ofmeet.event.pdf.message", json);
                             ofMeetContent.contentWindow.handlePdfShare(json.msg, json.from);
                         }
                     }
@@ -193,6 +235,78 @@ var ofmeet = (function(of)
         console.log("ofmeet.js __init");
         of.subtitles = document.getElementById("subtitles");
 
+        remoteControlPort = OFMEET_CONFIG.bgWin.pade.remoteControlPort;
+
+        if (remoteControlPort)
+        {
+            APP.remoteControl.receiver._onRemoteControlSupported();
+        }
+
+        APP.conference.addConferenceListener(JitsiMeetJS.events.conference.ENDPOINT_MESSAGE_RECEIVED, function(participant, message)
+        {
+            if (message.type != "stats")
+            {
+                console.log("ofmeet.js endpoint_message", participant._id, message);
+
+                if (message.type == "permissions")
+                {
+                    remoteController = participant;
+                }
+                else
+
+                if (message.type == "keydown")
+                {
+                    remoteControlPort.postMessage({event: "ofmeet.remote.keydown", key: message.key});
+                }
+                else
+
+                if (message.type == "keyup")
+                {
+                    remoteControlPort.postMessage({event: "ofmeet.remote.keyup", key: message.key});
+                }
+                else
+                if (message.type == "mousemove")
+                {
+                    remoteControlPort.postMessage({event: "ofmeet.remote.mousemove", x: message.x, y: message.y});
+                }
+                else
+
+                if (message.type == "mousedown")
+                {
+                    remoteControlPort.postMessage({event: "ofmeet.remote.mousedown", button: message.button});
+                }
+                else
+
+                if (message.type == "mouseup")
+                {
+                    remoteControlPort.postMessage({event: "ofmeet.remote.mouseup", button: message.button});
+                }
+                else
+
+                if (message.type == "mousedblclick")
+                {
+                    remoteControlPort.postMessage({event: "ofmeet.remote.mousedblclick", button: message.button});
+                }
+                else
+
+                if (message.type == "mousescroll")
+                {
+                    remoteControlPort.postMessage({event: "ofmeet.remote.wheel", button: message.deltaY});
+                }
+                else
+
+                if (message.type == "stop")
+                {
+                    if (remoteController)
+                    {
+                        APP.remoteControl.receiver.sendRemoteControlEndpointMessage(remoteController._id, {
+                            type: "stop"
+                        });
+                    }
+                }
+            }
+        });
+
         APP.conference.addConferenceListener(JitsiMeetJS.events.conference.CONFERENCE_JOINED, function()
         {
             console.log("ofmeet.js me joined");
@@ -213,9 +327,9 @@ var ofmeet = (function(of)
 
         APP.conference.addConferenceListener(JitsiMeetJS.events.conference.MESSAGE_RECEIVED , function(id, text, ts)
         {
-            //console.log("ofmeet.js message", id, text, ts);
+            console.log("ofmeet.js message", id, text, ts);
 
-            if (OFMEET_CONFIG.enableCaptions && text.startsWith("https://") == false)
+            if (OFMEET_CONFIG.enableCaptions && text.indexOf("https://") == -1)
             {
                 of.subtitles.innerHTML = id.split("-")[0] + " : " + text;
             }
@@ -725,7 +839,7 @@ var ofmeet = (function(of)
     config.inviteServiceUrl     = 'https://' + OFMEET_CONFIG.hostname + '/ofmeet/inviteservice.json';
 
     config.p2p = {
-        enabled: true,
+        enabled: getSetting("p2pMode", false),
         stunServers: [
             { urls: "stun:stun.l.google.com:19302" },
             { urls: "stun:stun1.l.google.com:19302" },

@@ -1,4 +1,4 @@
-var pade = {gmailWindow: [], webAppsWindow: []}
+var pade = {gmailWindow: [], webAppsWindow: [], chatsWindow: [], vcards: {}}
 var callbacks = {}
 
 // uPort
@@ -80,9 +80,9 @@ window.addEventListener("unload", function ()
     closeVideoWindow();
     closePhoneWindow();
     closeBlogWindow();
+    closeAVCaptureWindow();
     closeBlastWindow();
     closeVertoWindow();
-    closeWebAppsWindow();
     closeApcWindow();
     closeOffice365Window(true);
     closeOffice365Window(false);
@@ -99,6 +99,16 @@ window.addEventListener("unload", function ()
     for (var i=0; i<webApps.length; i++)
     {
         closeWebAppsWindow(webApps[i]);
+    }
+
+    var chats = Object.getOwnPropertyNames(pade.chatsWindow);
+
+    for (var y = 0; y<chats.length; y++)
+    {
+        if (pade.chatsWindow[chats[y]] && win == pade.chatsWindow[chats[y]].id)
+        {
+           closeChatsWindow(chats[y]);
+        }
     }
 
     etherlynk.disconnect();
@@ -279,6 +289,7 @@ window.addEventListener("load", function()
     addInverseMenu();
     addBlogMenu();
     addBlastMenu();
+    addAVCaptureMenu();
     addVertoMenu();
     addTouchPadMenu();
     addOffice365Business();
@@ -388,6 +399,10 @@ window.addEventListener("load", function()
         {
             pade.blogWindow = null;
         }
+        if (pade.avCaptureWindow && win == pade.avCaptureWindow.id)
+        {
+            pade.avCaptureWindow = null;
+        }
 
         if (pade.blastWindow && win == pade.blastWindow.id)
         {
@@ -448,6 +463,17 @@ window.addEventListener("load", function()
                 delete pade.webAppsWindow[webApps[i]];
             }
         }
+
+        var chats = Object.getOwnPropertyNames(pade.chatsWindow);
+
+        for (var y = 0; y<chats.length; y++)
+        {
+            if (pade.chatsWindow[chats[y]] && win == pade.chatsWindow[chats[y]].id)
+            {
+               delete pade.chatsWindow[chats[y]];
+            }
+        }
+
     });
 
     chrome.browserAction.setBadgeBackgroundColor({ color: '#ff0000' });
@@ -473,28 +499,14 @@ window.addEventListener("load", function()
 
         if (getSetting("useJabra", false))
         {
-            pade.jabraPort = chrome.runtime.connectNative("pade.igniterealtime.org");
+            setupJabra();
+        }
 
-            if (pade.jabraPort)
-            {
-                console.log("jabra connected");
+        // setup remote control
 
-                pade.jabraPort.onMessage.addListener(function(data)
-                {
-                    //console.log("jabra incoming", data);
-                    handleJabraMessage(data.message);
-                });
-
-                pade.jabraPort.onDisconnect.addListener(function()
-                {
-                    console.log("jabra disconnected");
-                    pade.jabraPort = null;
-                });
-
-                pade.jabraPort.postMessage({ message: "getdevices" });
-                pade.jabraPort.postMessage({ message: "getactivedevice" });
-                pade.jabraPort.postMessage({ message: "onhook" });
-            }
+        if (getSetting("enableRemoteControl", false))
+        {
+            enableRemoteControl();
         }
 
         // setup SIP
@@ -534,7 +546,9 @@ window.addEventListener("load", function()
                     });
 
                     updateVCard();
-                });
+                    setupStreamDeck();
+
+                }, 3000);
             }
             else
 
@@ -965,7 +979,31 @@ function openWebAppsWindow(url, state)
     }
 }
 
+function closeChatsWindow(window)
+{
+    if (pade.chatsWindow[window] != null)
+    {
+        chrome.windows.remove(pade.chatsWindow[window].id);
+        delete pade.chatsWindow[window];
+    }
+}
 
+function openChatsWindow(url, from)
+{
+    var data = {url: chrome.extension.getURL(url), type: "popup", focused: true};
+
+    if (!pade.chatsWindow[from])
+    {
+        chrome.windows.create(data, function (win)
+        {
+            pade.chatsWindow[from] = win;
+            chrome.windows.update(pade.chatsWindow[from].id, {drawAttention: true, width: 761, height: 900});
+        });
+
+    } else {
+        chrome.windows.update(pade.chatsWindow[from].id, {drawAttention: true, focused: true});
+    }
+}
 
 function closePhoneWindow()
 {
@@ -1013,6 +1051,9 @@ function closeChatWindow()
 function openChatWindow(url, update, state)
 {
     var data = {url: chrome.extension.getURL(url), type: "popup", focused: true};
+    var width = 1300;
+
+    if (url.indexOf("#") > -1) width = 761;    // width of mobile view_mode
 
     if (state == "minimized")
     {
@@ -1027,7 +1068,7 @@ function openChatWindow(url, update, state)
         chrome.windows.create(data, function (win)
         {
             pade.chatWindow = win;
-            chrome.windows.update(pade.chatWindow.id, {drawAttention: true, width: 1300, height: 900});
+            chrome.windows.update(pade.chatWindow.id, {drawAttention: true, width: width, height: 900});
         });
 
     } else {
@@ -1091,6 +1132,32 @@ function openBlogWindow()
         });
     } else {
         chrome.windows.update(pade.blogWindow.id, {drawAttention: true, focused: true});
+    }
+}
+
+function closeAVCaptureWindow()
+{
+    if (pade.avCaptureWindow != null)
+    {
+        try {
+            chrome.windows.remove(pade.avCaptureWindow.id);
+        } catch (e) {}
+    }
+}
+
+function openAVCaptureWindow()
+{
+    if (!pade.avCaptureWindow)
+    {
+        var url = chrome.extension.getURL("avcapture/index.html");
+
+        chrome.windows.create({url: url, focused: true, type: "popup"}, function (win)
+        {
+            pade.avCaptureWindow = win;
+            chrome.windows.update(pade.avCaptureWindow.id, {width: 800, height: 600, drawAttention: true});
+        });
+    } else {
+        chrome.windows.update(pade.avCaptureWindow.id, {drawAttention: true, focused: true});
     }
 }
 
@@ -1262,11 +1329,28 @@ function addHandlers()
         var room = null;
         var autoaccept = null;
 
-        console.log("message handler", from, to, type)
+        console.log("message handler", from, to, message)
+
+        $(message).find('ofmeet').each(function ()
+        {
+            var json = JSON.parse($(this).text());
+
+            if (json.event.indexOf("ofmeet.remote.") == 0)
+            {
+                if (pade.screenShare && pade.remoteControlPort)
+                {
+                    console.log("ofmeet.js remote.control", json);
+                    pade.remoteControlPort.postMessage(json);
+                }
+
+                return true;
+            }
+        });
 
         $(message).find('body').each(function ()
         {
             var body = $(this).text();
+            var pos0 = body.indexOf("/jitsimeet/index.html?room=")
             var pos1 = body.indexOf("/ofmeet/");
             var pos2 = body.indexOf("https://" + pade.server)
 
@@ -1274,11 +1358,26 @@ function addHandlers()
 
             console.log("message handler body", body, offerer);
 
+            if ( pos0 > -1 && pos2 > -1 )
+            {
+                room = body.substring(pos0 + 27);
+                handleInvitation({room: room, offerer: offerer});
+            }
+            else
+
             if ( pos1 > -1 && pos2 > -1 )
             {
                 room = body.substring(pos1 + 8);
                 handleInvitation({room: room, offerer: offerer});
             }
+            else
+
+            if (!pade.chatWindow && !pade.chatsWindow[offerer])
+            {
+                // converse/inverse is closed generate notification
+                processChatNotification(offerer, body);
+            }
+
         });
 
         $(message).find('x').each(function ()
@@ -1606,6 +1705,18 @@ function processInvitation(title, label, room, autoaccept)
     }
 }
 
+function processChatNotification(from, body)
+{
+    notifyText(body, from, null, [{title: "View", iconUrl: chrome.extension.getURL("success-16x16.gif")}, {title: "Ignore", iconUrl: chrome.extension.getURL("forbidden-16x16.gif")}], function(notificationId, buttonIndex)
+    {
+        if (buttonIndex == 0)   // accept
+        {
+            if (getSetting("enableInverse", false)) openChatsWindow("inverse/index.html#converse/chat?jid=" + from, from);
+            if (getSetting("enableChat", false)) openChatWindow("groupchat/index.html");
+        }
+    }, from);
+}
+
 function acceptCall(title, label, room)
 {
     //console.log("acceptCall", title, label, room);
@@ -1658,6 +1769,34 @@ function acceptRejectOffer(properties)
         console.warn("workgroup offer from unknown source", properties.workgroupJid);
     }
 }
+
+
+function setupJabra()
+{
+    pade.jabraPort = chrome.runtime.connectNative("pade.igniterealtime.org");
+
+    if (pade.jabraPort)
+    {
+        console.log("jabra connected");
+
+        pade.jabraPort.onMessage.addListener(function(data)
+        {
+            //console.log("jabra incoming", data);
+            handleJabraMessage(data.message);
+        });
+
+        pade.jabraPort.onDisconnect.addListener(function()
+        {
+            console.log("jabra disconnected");
+            pade.jabraPort = null;
+        });
+
+        pade.jabraPort.postMessage({ message: "getdevices" });
+        pade.jabraPort.postMessage({ message: "getactivedevice" });
+        pade.jabraPort.postMessage({ message: "onhook" });
+    }
+}
+
 function handleJabraMessage(message)
 {
     if (message.startsWith("Event: Version ")) {
@@ -1847,6 +1986,23 @@ function addBlogMenu()
     }
 }
 
+function removeAVCaptureMenu()
+{
+    closeAVCaptureWindow();
+    chrome.contextMenus.remove("pade_avcapture");
+}
+
+function addAVCaptureMenu()
+{
+    if (getSetting("enableAVCapture", false))
+    {
+        chrome.contextMenus.create({parentId: "pade_applications", id: "pade_avcapture", type: "normal", title: "Audio/Video Capture", contexts: ["browser_action"],  onclick: function()
+        {
+            openAVCaptureWindow();
+        }});
+    }
+}
+
 function removeBlogMenu()
 {
     closeBlogWindow();
@@ -1863,7 +2019,6 @@ function addBlastMenu()
         }});
     }
 }
-
 function removeBlastMenu()
 {
     closeBlastWindow();
@@ -2127,17 +2282,21 @@ function updateVCard()
     }, avatarError);
 }
 
-var createAvatar = function(nickname)
+function createAvatar(nickname, width, height, font)
 {
+    if (!width) width = 32;
+    if (!height) height = 32;
+    if (!font) font = "16px Arial";
+
     var canvas = document.createElement('canvas');
     canvas.style.display = 'none';
-    canvas.width = '32';
-    canvas.height = '32';
+    canvas.width = width;
+    canvas.height = height;
     document.body.appendChild(canvas);
     var context = canvas.getContext('2d');
     context.fillStyle = "#777";
     context.fillRect(0, 0, canvas.width, canvas.height);
-    context.font = "16px Arial";
+    context.font = font;
     context.fillStyle = "#fff";
 
     var first, last;
@@ -2161,4 +2320,274 @@ var createAvatar = function(nickname)
     }
 
     return canvas.toDataURL();
+}
+
+function createStreamDeckImage(text, fill)
+{
+    if (!fill) fill = "#070";
+
+    var canvas = document.createElement('canvas');
+    canvas.style.display = 'none';
+    canvas.width = 72;
+    canvas.height = 72;
+    document.body.appendChild(canvas);
+    var context = canvas.getContext('2d');
+    context.fillStyle = fill;
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = "#fff";
+
+    if (text.indexOf(" ") > -1)
+    {
+       context.font = "16px Arial";
+       texts = text.split(" ");
+       context.fillText(texts[0], 3, 32);
+       context.fillText(texts[1], 3, 48);
+
+    } else {
+       context.font = "24px Arial";
+       context.fillText(text, 3, 48);
+    }
+
+    var data = canvas.toDataURL();
+    document.body.removeChild(canvas);
+
+    return canvas.toDataURL();
+}
+
+function setupStreamDeck()
+{
+    if (!getSetting("useStreamDeck", false))
+    {
+        return;
+    }
+
+    pade.streamDeckPort = chrome.runtime.connectNative("pade.stream.deck");
+
+    if (pade.streamDeckPort)
+    {
+        console.log("stream deck connected");
+
+        pade.streamDeckPort.onMessage.addListener(function(data)
+        {
+            //console.log("stream deck incoming", data);
+
+            if (data.message == "keypress")
+            {
+                if (data.key < 5)
+                {
+                    handleStreamDeckPage(data.key + 1)
+                } else {
+                    handleStreamDeckKey(data.key);
+                }
+            }
+
+        });
+
+        pade.streamDeckPort.onDisconnect.addListener(function()
+        {
+            console.log("stream deck disconnected");
+            pade.streamDeckPort = null;
+        });
+
+        pade.streamDeckPage = 1;
+
+        for (var b=0; b<15; b++)
+        {
+           pade.streamDeckPort.postMessage({ message: "setColor", key: b, color: 0 });
+        }
+
+        for (var p=1; p<6; p++)
+        {
+            if (getSetting("pageEnabled_" + p, false))
+            {
+                var label = getSetting("pageLabel_" + p, null);
+
+                if (label)
+                {
+                    pade.streamDeckPort.postMessage({ message: "setImage", key: p-1, data: createStreamDeckImage(label, p==pade.streamDeckPage ? "#700" : "#070")});
+                }
+            }
+        }
+
+        for (var b=5; b<15; b++)
+        {
+            setupStreadDeckKey(b);
+        }
+    }
+}
+
+function setupStreadDeckKey(b)
+{
+    var p = pade.streamDeckPage;                    // page 91-5)
+    var i = b < 13 ? 1 : 2;                         // row 1 - 2 (2x10 = 20)
+    var j = ((b - 5) % 8) + 1;                      // cols 1 - 8 plus 2 = 10
+
+    if (getSetting("cellEnabled_" + p + "_" + i + "_" + j, false))
+    {
+        var label = getSetting("cellLabel_" + p + "_" + i + "_" + j, null);
+        var value = getSetting("cellValue_" + p + "_" + i + "_" + j, null);
+
+        if (value && value.indexOf("im:") == 0)
+        {
+            var jid = value.substring(3);
+
+            if (jid.indexOf("@") == -1)
+            {
+                var domain = getSetting("domain", null);
+                jid = jid + "@" + domain;
+            }
+
+            getVCard(jid, function(vCard)
+            {
+                if (vCard.avatar)
+                {
+                    var sourceImage = new Image();
+
+                    sourceImage.onload = function()
+                    {
+                        var canvas = document.createElement("canvas");
+                        canvas.width = 72;
+                        canvas.height = 72;
+                        canvas.getContext("2d").drawImage(sourceImage, 0, 0, 72, 72);
+                        vCard.avatar = canvas.toDataURL();
+                        pade.vcards[jid] = vCard;
+
+                        pade.streamDeckPort.postMessage({ message: "setImage", key: b, data: pade.vcards[jid].avatar});
+                    }
+                    sourceImage.src = vCard.avatar;
+                }
+
+            });
+        }
+
+        if (label)
+        {
+            pade.streamDeckPort.postMessage({ message: "setImage", key: b, data: createStreamDeckImage(label)});
+        }
+    }
+}
+
+function handleStreamDeckPage(p)
+{
+    for (var z=1; z<6; z++)
+    {
+        if (getSetting("pageEnabled_" + z, false))
+        {
+            var label = getSetting("pageLabel_" + z, null);
+
+            if (label)
+            {
+                pade.streamDeckPort.postMessage({ message: "setImage", key: z-1, data: createStreamDeckImage(label, "#070")});
+            }
+        }
+    }
+
+    pade.streamDeckPage = p;
+
+    if (getSetting("pageEnabled_" + p, false))
+    {
+        var label = getSetting("pageLabel_" + p, null);
+
+        if (label)
+        {
+            pade.streamDeckPort.postMessage({ message: "setImage", key: p-1, data: createStreamDeckImage(label, "#700")});
+        }
+
+        for (var b=5; b<15; b++)
+        {
+            pade.streamDeckPort.postMessage({ message: "setColor", key: b, color: 0 });
+
+            var i = b < 13 ? 1 : 2;     // row 1 - 2 (2x10 = 20)
+            var j = ((b - 5) % 8) + 1;  // cols 1 - 8 plus 2 = 10
+
+            if (getSetting("cellEnabled_" + p + "_" + i + "_" + j, false))
+            {
+                var label = getSetting("cellLabel_" + p + "_" + i + "_" + j, null);
+
+                if (label)
+                {
+                    pade.streamDeckPort.postMessage({ message: "setImage", key: b, data: createStreamDeckImage(label)});
+                }
+            }
+        }
+    }
+}
+
+function handleStreamDeckKey(key)
+{
+    var p = pade.streamDeckPage;
+    var i = key < 13 ? 1 : 2;
+    var j = ((key - 5) % 8) + 1;
+
+    if (getSetting("cellEnabled_" + p + "_" + i + "_" + j, false))
+    {
+        var label = getSetting("cellLabel_" + p + "_" + i + "_" + j, null);
+        var value = getSetting("cellValue_" + p + "_" + i + "_" + j, null);
+
+        if (value)
+        {
+            if (value.indexOf("im:") == 0)
+            {
+                var jid = value.substring(3);
+
+                if (jid.indexOf("@") == -1)
+                {
+                    var domain = getSetting("domain", null);
+                    jid = jid + "@" + domain;
+                }
+
+                doStreamDeckUrl("inverse/index.html#converse/chat?jid=" + jid, jid, label, key);
+            }
+            else
+
+            if (value.indexOf("xmpp:") == 0)
+            {
+                var jid = value.substring(5);
+
+                if (jid.indexOf("@") == -1)
+                {
+                    var domain = getSetting("domain", null);
+                    jid = jid + "@conference." + domain;
+                }
+
+                doStreamDeckUrl("inverse/index.html#converse/room?jid=" + jid, jid, label, key);
+            }
+        }
+    }
+}
+
+function doStreamDeckUrl(url, jid, label, key)
+{
+    if (pade.chatsWindow[jid])
+    {
+        closeChatsWindow(jid);
+        pade.streamDeckPort.postMessage({ message: "setImage", key: key, data: pade.vcards[jid] ? pade.vcards[jid].avatar : createStreamDeckImage(label, "#070")});
+
+    } else {
+        openChatsWindow(url, jid);
+        pade.streamDeckPort.postMessage({ message: "setImage", key: key, data: createStreamDeckImage(label, "#700")});
+    }
+}
+
+function enableRemoteControl()
+{
+    pade.remoteControlPort = chrome.runtime.connectNative("pade.remote.control");
+
+    if (pade.remoteControlPort)
+    {
+        console.log("remote control host connected");
+
+        pade.remoteControlPort.onMessage.addListener(function(data)
+        {
+            console.log("remote control incoming", data);
+        });
+
+        pade.remoteControlPort.onDisconnect.addListener(function()
+        {
+            console.log("remote control host disconnected");
+            pade.remoteControlPort = null;
+        });
+
+        pade.remoteControlPort.postMessage({ event: "ofmeet.remote.hello" });
+    }
 }
