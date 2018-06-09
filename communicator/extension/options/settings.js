@@ -44,7 +44,7 @@ window.addEvent("domready", function () {
 
         document.getElementById("uploadApplication").addEventListener('change', function(event)
         {
-            uploadApplication(event, settings);
+            uploadApplication(event, settings, background);
         });
 
         setDefaultPassword(settings);
@@ -172,6 +172,16 @@ window.addEvent("domready", function () {
             } else {
                background.removeGmail();
             }
+        });
+
+        settings.manifest.changelog.addEvent("action", function ()
+        {
+            location.href = "../changelog.html";
+        });
+
+        settings.manifest.help.addEvent("action", function ()
+        {
+            location.href = chrome.runtime.getManifest().homepage_url;
         });
 
         settings.manifest.enableSip.addEvent("action", function ()
@@ -376,12 +386,16 @@ function doDefaults()
     setSetting("enableBlog", false);
 
     // config
+    setSetting("startBitrate", 800);
+    setSetting("resolution", 720);
+    setSetting("minHDHeight", 540);
 
-
-    // user interface
+    // meeting
     setSetting("CAPTIONS_SUBTITLES", true);
     setSetting("VERTICAL_FILMSTRIP", true);
     setSetting("FILM_STRIP_MAX_HEIGHT", 90);
+    setSetting("INITIAL_TOOLBAR_TIMEOUT", 20000);
+    setSetting("TOOLBAR_TIMEOUT", 4000);
 
     // candy chat
     setSetting("chatWithOnlineContacts", true);
@@ -445,7 +459,7 @@ function getPassword(password)
     return password;
 }
 
-function uploadApplication(event, settings)
+function uploadApplication(event, settings, background)
 {
     //console.log("uploadApplication", event);
 
@@ -460,7 +474,7 @@ function uploadApplication(event, settings)
         {
             console.log("upload", file);
 
-            if (file.name.endsWith(".zip"))
+            if (file.name.endsWith(".zip") || file.name.endsWith(".h5p"))
             {
                 var putUrl = "https://" + server + "/dashboard/upload?name=" + file.name + "&username=" + username;
                 var req = new XMLHttpRequest();
@@ -471,6 +485,12 @@ function uploadApplication(event, settings)
                   {
                     console.log("pade.upload.app", this.statusText);
                     settings.manifest.uploadStatus.element.innerHTML = '<b>' + this.statusText + '</b>';
+
+                    setTimeout(function()
+                    {
+                         background.reloadApp();
+
+                    }, 2000);
                   }
                   else
 

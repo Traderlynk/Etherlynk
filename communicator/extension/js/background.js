@@ -454,7 +454,7 @@ window.addEventListener("load", function()
             }
         }
 
-        var webApps = getSetting("webApps", "").split(",");
+        var webApps = Object.getOwnPropertyNames(pade.webAppsWindow);
 
         for (var i=0; i<webApps.length; i++)
         {
@@ -502,13 +502,6 @@ window.addEventListener("load", function()
             setupJabra();
         }
 
-        // setup remote control
-
-        if (getSetting("enableRemoteControl", false))
-        {
-            enableRemoteControl();
-        }
-
         // setup SIP
         pade.sip = {};
         pade.enableSip = getSetting("enableSip", false);
@@ -530,7 +523,7 @@ window.addEventListener("load", function()
             {
                 addHandlers();
 
-                chrome.browserAction.setBadgeText({ text: "" });
+                chrome.browserAction.setBadgeText({ text: "Wait.." });
                 pade.connection.send($pres());
 
                 chrome.browserAction.setTitle({title: chrome.i18n.getMessage('manifest_shortExtensionName') + " - Connected"});
@@ -547,6 +540,9 @@ window.addEventListener("load", function()
 
                     updateVCard();
                     setupStreamDeck();
+                    enableRemoteControl();
+
+                    chrome.browserAction.setBadgeText({ text: "" });
 
                 }, 3000);
             }
@@ -583,12 +579,25 @@ function handleContact(contact)
         if (contact.id == 0)
         {
             chrome.contextMenus.create({id: "pade_content", type: "normal", title: "Shared Documents", contexts: ["browser_action"]});
-            pade.activeUrl = contact.url; // default
+
+            chrome.contextMenus.create({id: "pade_h5p", type: "normal", title: "H5P Interactive Content", contexts: ["browser_action"]});
+            chrome.contextMenus.create({parentId: "pade_h5p", type: "normal", id: "pade_h5p_viewer", title: "H5P Content Viewer", contexts: ["browser_action"],  onclick: handleH5pViewerClick});
         }
 
         contact.created = true;
-        chrome.contextMenus.create({parentId: "pade_content", type: "radio", id: contact.url, title: contact.name, contexts: ["browser_action"],  onclick: handleUrlClick});
+        var urlMenu = null;
 
+        if (contact.url.indexOf("/h5p/") > -1)
+        {
+            urlMenu = {parentId: "pade_h5p", type: "radio", id: contact.url, title: contact.name, contexts: ["browser_action"],  onclick: handleH5pClick};
+            if (!pade.activeH5p) pade.activeH5p = contact.url;
+
+        } else {
+            urlMenu = {parentId: "pade_content", type: "radio", id: contact.url, title: contact.name, contexts: ["browser_action"],  onclick: handleUrlClick};
+            if (!pade.activeUrl) pade.activeUrl = contact.url; // default
+        }
+
+        chrome.contextMenus.create(urlMenu);
     }
     else
 
@@ -718,6 +727,18 @@ function handleUrlClick(info)
 {
     //console.log("handleUrlClick", info);
     pade.activeUrl = info.menuItemId;
+}
+
+function handleH5pClick(info)
+{
+    //console.log("handleH5pClick", info);
+    pade.activeH5p = info.menuItemId;
+}
+
+function handleH5pViewerClick(info)
+{
+    console.log("handleH5pViewerClick", info);
+    if (pade.activeH5p) openWebAppsWindow(pade.activeH5p, null, 800, 600)
 }
 
 function reloadApp()
@@ -952,8 +973,11 @@ function closeWebAppsWindow(window)
     }
 }
 
-function openWebAppsWindow(url, state)
+function openWebAppsWindow(url, state, width, height)
 {
+    if (!width) width = 1024;
+    if (!height) height = 768;
+
     if (url.startsWith("_")) url = url.substring(1);
     var httpUrl = url.startsWith("http") ? url.trim() : "https://" + url.trim();
     var data = {url: httpUrl, type: "popup", focused: true};
@@ -971,7 +995,7 @@ function openWebAppsWindow(url, state)
         chrome.windows.create(data, function (win)
         {
             pade.webAppsWindow[url] = win;
-            chrome.windows.update(pade.webAppsWindow[url].id, {drawAttention: true, width: 640, height: 1024});
+            chrome.windows.update(pade.webAppsWindow[url].id, {drawAttention: true, width: width, height: height});
         });
 
     } else {
@@ -1330,22 +1354,6 @@ function addHandlers()
         var autoaccept = null;
 
         console.log("message handler", from, to, message)
-
-        $(message).find('ofmeet').each(function ()
-        {
-            var json = JSON.parse($(this).text());
-
-            if (json.event.indexOf("ofmeet.remote.") == 0)
-            {
-                if (pade.screenShare && pade.remoteControlPort)
-                {
-                    console.log("ofmeet.js remote.control", json);
-                    pade.remoteControlPort.postMessage(json);
-                }
-
-                return true;
-            }
-        });
 
         $(message).find('body').each(function ()
         {
@@ -2356,62 +2364,60 @@ function createStreamDeckImage(text, fill)
 
 function setupStreamDeck()
 {
-    if (!getSetting("useStreamDeck", false))
+    if (getSetting("useStreamDeck", false))
     {
-        return;
-    }
+        pade.streamDeckPort = chrome.runtime.connectNative("pade.stream.deck");
 
-    pade.streamDeckPort = chrome.runtime.connectNative("pade.stream.deck");
-
-    if (pade.streamDeckPort)
-    {
-        console.log("stream deck connected");
-
-        pade.streamDeckPort.onMessage.addListener(function(data)
+        if (pade.streamDeckPort)
         {
-            //console.log("stream deck incoming", data);
+            console.log("stream deck connected");
 
-            if (data.message == "keypress")
+            pade.streamDeckPort.onMessage.addListener(function(data)
             {
-                if (data.key < 5)
+                //console.log("stream deck incoming", data);
+
+                if (data.message == "keypress")
                 {
-                    handleStreamDeckPage(data.key + 1)
-                } else {
-                    handleStreamDeckKey(data.key);
+                    if (data.key < 5)
+                    {
+                        handleStreamDeckPage(data.key + 1)
+                    } else {
+                        handleStreamDeckKey(data.key);
+                    }
+                }
+
+            });
+
+            pade.streamDeckPort.onDisconnect.addListener(function()
+            {
+                console.log("stream deck disconnected");
+                pade.streamDeckPort = null;
+            });
+
+            pade.streamDeckPage = 1;
+
+            for (var b=0; b<15; b++)
+            {
+               pade.streamDeckPort.postMessage({ message: "setColor", key: b, color: 0 });
+            }
+
+            for (var p=1; p<6; p++)
+            {
+                if (getSetting("pageEnabled_" + p, false))
+                {
+                    var label = getSetting("pageLabel_" + p, null);
+
+                    if (label)
+                    {
+                        pade.streamDeckPort.postMessage({ message: "setImage", key: p-1, data: createStreamDeckImage(label, p==pade.streamDeckPage ? "#700" : "#070")});
+                    }
                 }
             }
 
-        });
-
-        pade.streamDeckPort.onDisconnect.addListener(function()
-        {
-            console.log("stream deck disconnected");
-            pade.streamDeckPort = null;
-        });
-
-        pade.streamDeckPage = 1;
-
-        for (var b=0; b<15; b++)
-        {
-           pade.streamDeckPort.postMessage({ message: "setColor", key: b, color: 0 });
-        }
-
-        for (var p=1; p<6; p++)
-        {
-            if (getSetting("pageEnabled_" + p, false))
+            for (var b=5; b<15; b++)
             {
-                var label = getSetting("pageLabel_" + p, null);
-
-                if (label)
-                {
-                    pade.streamDeckPort.postMessage({ message: "setImage", key: p-1, data: createStreamDeckImage(label, p==pade.streamDeckPage ? "#700" : "#070")});
-                }
+                setupStreadDeckKey(b);
             }
-        }
-
-        for (var b=5; b<15; b++)
-        {
-            setupStreadDeckKey(b);
         }
     }
 }
@@ -2571,23 +2577,26 @@ function doStreamDeckUrl(url, jid, label, key)
 
 function enableRemoteControl()
 {
-    pade.remoteControlPort = chrome.runtime.connectNative("pade.remote.control");
-
-    if (pade.remoteControlPort)
+    if (getSetting("enableRemoteControl", false))
     {
-        console.log("remote control host connected");
+        pade.remoteControlPort = chrome.runtime.connectNative("pade.remote.control");
 
-        pade.remoteControlPort.onMessage.addListener(function(data)
+        if (pade.remoteControlPort)
         {
-            console.log("remote control incoming", data);
-        });
+            console.log("remote control host connected");
 
-        pade.remoteControlPort.onDisconnect.addListener(function()
-        {
-            console.log("remote control host disconnected");
-            pade.remoteControlPort = null;
-        });
+            pade.remoteControlPort.onMessage.addListener(function(data)
+            {
+                console.log("remote control incoming", data);
+            });
 
-        pade.remoteControlPort.postMessage({ event: "ofmeet.remote.hello" });
+            pade.remoteControlPort.onDisconnect.addListener(function()
+            {
+                console.log("remote control host disconnected");
+                pade.remoteControlPort = null;
+            });
+
+            pade.remoteControlPort.postMessage({ event: "ofmeet.remote.hello" });
+        }
     }
 }
