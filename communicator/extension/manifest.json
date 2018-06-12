@@ -7,7 +7,7 @@
   "name": "__MSG_manifest_extensionName__",
   "description": "__MSG_manifest_extensionDescription__",
   "version": "0.4.9",
-  "homepage_url": "https://traderlynk.github.io",  
+  "homepage_url": "https://traderlynk.github.io/Etherlynk/",  
     
   "background": {
         "persistent": true,
