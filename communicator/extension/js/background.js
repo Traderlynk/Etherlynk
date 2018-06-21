@@ -210,9 +210,13 @@ window.addEventListener("load", function()
 
     chrome.runtime.onConnect.addListener(function(port)
     {
-        console.log("popup connect");
-        pade.popup = true;
-        pade.port = port;
+        console.log("popup connect", port.sender.url);
+
+        if (port.sender.url.indexOf("chrome-extension://") > -1 && port.sender.url.indexOf("/apc.html") > -1)
+        {
+            pade.popup = true;
+            pade.port = port;
+        }
 
         port.onMessage.addListener(function(message)
         {
@@ -260,8 +264,12 @@ window.addEventListener("load", function()
         port.onDisconnect.addListener(function()
         {
             console.log("popup disconnect");
-            pade.popup = false;
-            pade.port = null;
+
+            if (port.sender.url.indexOf("chrome-extension://") > -1 && port.sender.url.indexOf("/apc.html") > -1)
+            {
+                pade.popup = false;
+                pade.port = null;
+            }
         });
     });
 
@@ -1014,19 +1022,15 @@ function closeChatsWindow(window)
 
 function openChatsWindow(url, from)
 {
+    closeChatsWindow(from)
+
     var data = {url: chrome.extension.getURL(url), type: "popup", focused: true};
 
-    if (!pade.chatsWindow[from])
+    chrome.windows.create(data, function (win)
     {
-        chrome.windows.create(data, function (win)
-        {
-            pade.chatsWindow[from] = win;
-            chrome.windows.update(pade.chatsWindow[from].id, {drawAttention: true, width: 761, height: 900});
-        });
-
-    } else {
-        chrome.windows.update(pade.chatsWindow[from].id, {drawAttention: true, focused: true});
-    }
+        pade.chatsWindow[from] = win;
+        chrome.windows.update(pade.chatsWindow[from].id, {drawAttention: true, width: 761, height: 900});
+    });
 }
 
 function closePhoneWindow()
@@ -1147,7 +1151,7 @@ function openBlogWindow()
 {
     if (!pade.blogWindow)
     {
-        var url = "https://" + pade.server + "/" + getSetting("blogName", "solo") + "/admin-index.do#main";
+        var url = "https://" + pade.username + ":" + pade.password + "@" + pade.server + "/" + getSetting("blogName", "solo") + "/admin-index.do#main";
 
         chrome.windows.create({url: url, focused: true, type: "popup"}, function (win)
         {
@@ -1173,12 +1177,12 @@ function openAVCaptureWindow()
 {
     if (!pade.avCaptureWindow)
     {
-        var url = chrome.extension.getURL("avcapture/index.html");
+        var url = chrome.extension.getURL("webcam/index.html");
 
         chrome.windows.create({url: url, focused: true, type: "popup"}, function (win)
         {
             pade.avCaptureWindow = win;
-            chrome.windows.update(pade.avCaptureWindow.id, {width: 800, height: 600, drawAttention: true});
+            chrome.windows.update(pade.avCaptureWindow.id, {width: 800, height: 640, drawAttention: true});
         });
     } else {
         chrome.windows.update(pade.avCaptureWindow.id, {drawAttention: true, focused: true});
@@ -1199,7 +1203,7 @@ function openBlastWindow()
 {
     if (!pade.blastWindow)
     {
-        var url = "https://" + pade.server + "/dashboard/blast";
+        var url = "https://" + pade.username + ":" + pade.password + "@" + pade.server + "/dashboard/blast";
 
         chrome.windows.create({url: url, focused: true, type: "popup"}, function (win)
         {
@@ -1223,7 +1227,7 @@ function closeVertoWindow()
 
 function openVertoWindow(state)
 {
-    var data = {url: "https://" + pade.server + "/dashboard/verto", type: "popup", focused: true};
+    var data = {url: "https://" + pade.username + ":" + pade.password + "@" + pade.server + "/dashboard/verto", type: "popup", focused: true};
 
     if (state == "minimized")
     {
@@ -1426,7 +1430,7 @@ function addHandlers()
                     });
                 }
 
-                handleInvitation({room: room, offerer: offerer, autoaccept: autoaccept});
+                handleInvitation({room: room, offerer: offerer, autoaccept: autoaccept, id: id});
             }
         });
 
@@ -1537,10 +1541,10 @@ function fetchContacts(callback)
                 type: "room",
                 jid: room,
                 presence: "room",
-                name: name,
+                name: 'workgroup-' + name,
                 pinned: true,
                 open: true,
-                room: room,
+                room: 'workgroup-' + name,
                 domain: pade.connection.domain
             });
 
@@ -1663,24 +1667,26 @@ function handleInvitation(invite)
     if (pade.participants[jid])
     {
         var participant = pade.participants[jid];
-        processInvitation(participant.name, participant.jid, invite.room, invite.autoaccept);
+        processInvitation(participant.name, participant.jid, invite.room, invite.autoaccept, invite.id);
     }
     else
 
     if (invite.offerer == pade.domain)
     {
-        processInvitation("Administrator", "admin@"+pade.domain, invite.room, invite.autoaccept);
+        processInvitation("Administrator", "admin@"+pade.domain, invite.room, invite.autoaccept, invite.id);
     }
     else {
-        processInvitation("Unknown User", invite.offerer, invite.room);
+        processInvitation("Unknown User", invite.offerer, invite.room, invite.id);
     }
 
-    if (pade.port) pade.port.postMessage({event: "invited", id : invite.offerer, name: invite.room});
+    // inform touchpad
+
+    if (pade.port) pade.port.postMessage({event: "invited", id : invite.offerer, name: invite.room, jid: invite.id});
 }
 
-function processInvitation(title, label, room, autoaccept)
+function processInvitation(title, label, room, autoaccept, id)
 {
-    //console.log("processInvitation", title, label, room);
+    //console.log("processInvitation", title, label, room, id);
 
     if (!autoaccept || autoaccept != "true")
     {
@@ -1693,7 +1699,7 @@ function processInvitation(title, label, room, autoaccept)
             if (buttonIndex == 0)   // accept
             {
                 stopTone();
-                acceptCall(title, label, room);
+                acceptCall(title, label, room, id);
             }
             else
 
@@ -1705,11 +1711,11 @@ function processInvitation(title, label, room, autoaccept)
         }, room);
 
         // jabra
-        pade.activeRoom = {title: title, label: label, room: room};
+        pade.activeRoom = {title: title, label: label, room: room, id: id};
         sendToJabra("ring");
 
     } else {
-        acceptCall(title, label, room);
+        acceptCall(title, label, room, id);
     }
 }
 
@@ -1725,7 +1731,7 @@ function processChatNotification(from, body)
     }, from);
 }
 
-function acceptCall(title, label, room)
+function acceptCall(title, label, room, id)
 {
     //console.log("acceptCall", title, label, room);
 
@@ -1734,7 +1740,14 @@ function acceptCall(title, label, room)
         joinAudioCall(title, label, room);
 
     } else {
-        openVideoWindow(room);
+
+        if (!id)    // ofmeet
+        {
+            openVideoWindow(room);
+
+        } else {
+            openChatsWindow("inverse/index.html#converse/room?jid=" + id, label);
+        }
     }
 }
 

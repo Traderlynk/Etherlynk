@@ -24,9 +24,9 @@
         "message": "2ofdeAidaU2mjJ5X8r1CgH2RdPb9qKVS9pc",
         "description": "uPort application id"
     }, 
-    "uport_signer": {
-        "message": "1b561603d69de7091fa9cee632741f7f313b4dd39bc328d38dc514bbb5f184e3",
-        "description": "uPort signer id"
+    "uport_permission": {
+        "message": "Wa1l7M9NoGwcxxdX",
+        "description": "uPort permission code"
     }, 
     "uport_ethereum_network": {
         "message": "rinkeby",
